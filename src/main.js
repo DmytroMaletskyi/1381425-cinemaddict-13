@@ -4,9 +4,11 @@ import {createFilmsSectionTemplate} from "./view/films-section.js";
 import {createFilmCardTemplate} from "./view/film-card.js";
 import {createShowMoreButtonTemplate} from "./view/show-more-button.js";
 import {createFilmsCounterTemplate} from "./view/films-counter.js";
+import {generateFilmsList} from "./mock/film.js";
 
 const FILMS_AMOUNT = 5;
 const EXTRA_FILMS_AMOUNT = 2;
+const FILMS = generateFilmsList();
 
 const render = (container, template, place) => {
   container.insertAdjacentHTML(place, template);
@@ -25,18 +27,17 @@ const filmsListsContainers = filmsSectionElement.querySelectorAll(`.films-list__
 const [filmsListContainer, topRatedFilmsContainer, mostCommentedFilmsContainer] = filmsListsContainers;
 
 for (let i = 0; i < FILMS_AMOUNT; i++) {
-  render(filmsListContainer, createFilmCardTemplate(), `beforeend`);
+  render(filmsListContainer, createFilmCardTemplate(FILMS[i]), `beforeend`);
 }
 
 render(filmsListContainer, createShowMoreButtonTemplate(), `afterend`);
 
-for (let i = 0; i < EXTRA_FILMS_AMOUNT; i++) {
-  render(topRatedFilmsContainer, createFilmCardTemplate(), `beforeend`);
+for (let i = FILMS_AMOUNT; i < FILMS_AMOUNT + EXTRA_FILMS_AMOUNT; i++) {
+  render(topRatedFilmsContainer, createFilmCardTemplate(FILMS[i]), `beforeend`);
 }
 
-for (let i = 0; i < EXTRA_FILMS_AMOUNT; i++) {
-  render(mostCommentedFilmsContainer, createFilmCardTemplate(), `beforeend`);
+for (let i = FILMS_AMOUNT + EXTRA_FILMS_AMOUNT; i < FILMS_AMOUNT + 2 * EXTRA_FILMS_AMOUNT; i++) {
+  render(mostCommentedFilmsContainer, createFilmCardTemplate(FILMS[i]), `beforeend`);
 }
 
 render(siteFooterElement, createFilmsCounterTemplate(), `beforeend`);
-
