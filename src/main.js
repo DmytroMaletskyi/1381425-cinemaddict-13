@@ -10,15 +10,15 @@ import {generateFilmsList} from "./mock/film.js";
 import {generateFilter} from "./mock/filter.js";
 import {generateUser} from "./mock/user.js";
 import {createFilmsDetailsPopupTemplate} from "./view/film-details-popup.js";
+import {copyFilmsArray} from "./utils.js";
 
-const FILMS_AMOUNT = 5;
+const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
 
 const films = generateFilmsList();
+const notDisplayedFilms = copyFilmsArray(films);
 const filters = generateFilter(films);
 const user = generateUser(films);
-
-console.log(user);
 
 const render = (container, template, place) => {
   container.insertAdjacentHTML(place, template);
@@ -31,27 +31,49 @@ const siteFooterElement = siteBodyElement.querySelector(`.footer`);
 
 render(siteHeaderElement, createUserRankTemplate(user), `beforeend`);
 render(siteMainElement, createSiteMenuTemplate(filters), `beforeend`);
-render(siteMainElement, createStatsSectionTemplate(user), `beforeend`);
-// render(siteMainElement, createSortTemplate(), `beforeend`);
-// render(siteMainElement, createFilmsSectionTemplate(), `beforeend`);
+// render(siteMainElement, createStatsSectionTemplate(user), `beforeend`);
+render(siteMainElement, createSortTemplate(), `beforeend`);
+render(siteMainElement, createFilmsSectionTemplate(), `beforeend`);
 
-// const filmsSectionElement = document.querySelector(`.films`);
-// const filmsListsContainers = filmsSectionElement.querySelectorAll(`.films-list__container`);
-// const [filmsListContainer, topRatedFilmsContainer, mostCommentedFilmsContainer] = filmsListsContainers;
+const filmsSectionElement = document.querySelector(`.films`);
+const filmsListsContainers = filmsSectionElement.querySelectorAll(`.films-list__container`);
+const [filmsListContainer, topRatedFilmsContainer, mostCommentedFilmsContainer] = filmsListsContainers;
 
-// for (let i = 0; i < FILMS_AMOUNT; i++) {
-//   render(filmsListContainer, createFilmCardTemplate(films[i]), `beforeend`);
-// }
+for (let i = 0; i < Math.min(notDisplayedFilms.length, FILMS_AMOUNT_PER_STEP); i++) {
+  render(filmsListContainer, createFilmCardTemplate(notDisplayedFilms.shift()), `beforeend`);
+}
 
-// render(filmsListContainer, createShowMoreButtonTemplate(), `afterend`);
+if (notDisplayedFilms.length > 0) {
+  render(filmsListContainer, createShowMoreButtonTemplate(), `afterend`);
 
-// for (let i = FILMS_AMOUNT; i < FILMS_AMOUNT + EXTRA_FILMS_AMOUNT; i++) {
-//   render(topRatedFilmsContainer, createFilmCardTemplate(films[i]), `beforeend`);
-// }
+  const showMoreButtonElement = filmsSectionElement.querySelector(`.films-list__show-more`);
 
-// for (let i = FILMS_AMOUNT + EXTRA_FILMS_AMOUNT; i < FILMS_AMOUNT + 2 * EXTRA_FILMS_AMOUNT; i++) {
-//   render(mostCommentedFilmsContainer, createFilmCardTemplate(films[i]), `beforeend`);
-// }
+  showMoreButtonElement.addEventListener(`click`, (evt) => {
+    evt.preventDefault();
+    if (notDisplayedFilms.length > FILMS_AMOUNT_PER_STEP) {
+      for (let i = 0; i < FILMS_AMOUNT_PER_STEP; i++) {
+        render(filmsListContainer, createFilmCardTemplate(notDisplayedFilms.shift()), `beforeend`);
+      }
+    } else {
+      const filmsAmount = notDisplayedFilms.length;
+      for (let i = 0; i < filmsAmount; i++) {
+        render(filmsListContainer, createFilmCardTemplate(notDisplayedFilms.shift()), `beforeend`);
+      }
+    }
+
+    if (notDisplayedFilms.length === 0) {
+      showMoreButtonElement.remove();
+    }
+  });
+}
+
+for (let i = FILMS_AMOUNT_PER_STEP; i < FILMS_AMOUNT_PER_STEP + EXTRA_FILMS_AMOUNT; i++) {
+  render(topRatedFilmsContainer, createFilmCardTemplate(films[i]), `beforeend`);
+}
+
+for (let i = FILMS_AMOUNT_PER_STEP + EXTRA_FILMS_AMOUNT; i < FILMS_AMOUNT_PER_STEP + 2 * EXTRA_FILMS_AMOUNT; i++) {
+  render(mostCommentedFilmsContainer, createFilmCardTemplate(films[i]), `beforeend`);
+}
 
 render(siteFooterElement, createFilmsCounterTemplate(films.length), `beforeend`);
 
