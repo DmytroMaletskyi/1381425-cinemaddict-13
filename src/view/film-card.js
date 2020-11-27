@@ -5,7 +5,7 @@ export const createFilmCardTemplate = (film) => {
     <p class="film-card__info">
       <span class="film-card__year">${film.releaseDate.format(`YYYY`)}</span>
       <span class="film-card__duration">${film.duration.$d.hours}h ${film.duration.$d.minutes}m</span>
-      <span class="film-card__genre">${film.genre[0]}</span>
+      <span class="film-card__genre">${film.genre.join(`, `)}</span>
     </p>
     <img src="./images/posters/${film.poster}" alt="" class="film-card__poster">
     <p class="film-card__description">${(film.description.length > 140) ? `${film.description.substring(0, 140)}...` : film.description}</p>

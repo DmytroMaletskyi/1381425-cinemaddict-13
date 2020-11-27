@@ -29,7 +29,7 @@ const getRandomElement = (elementsList) => {
   return elementsList[randomInt(elementsList.length - 1)];
 };
 
-const generateActorsList = (actorsAmount = randomInt(ACTORS_MAX)) => {
+const generateActorsList = (actorsAmount = randomInt(1, ACTORS_MAX)) => {
   const actorsList = [];
   for (let i = 0; i < actorsAmount; i++) {
     actorsList.push(`${getRandomElement(NAMES)} ${getRandomElement(SURNAMES)}`);
@@ -67,7 +67,7 @@ const generateFilm = () => {
     poster: getRandomElement(POSTERS),
     rating: random(10).toFixed(1),
     director: `${getRandomElement(NAMES)} ${getRandomElement(SURNAMES)}`,
-    screenwriter: `${getRandomElement(NAMES)} ${getRandomElement(SURNAMES)}`,
+    screenwriters: generateActorsList(),
     actors: generateActorsList(),
     releaseDate: generateReleaseDate(),
     duration: dayjs.extend(duration).duration(randomInt(60, 300), `minute`),

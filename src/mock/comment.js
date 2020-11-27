@@ -20,7 +20,7 @@ const generateCommentDate = () => {
   const daysGap = randomInt(1000);
   const hoursGap = randomInt(24);
   const minutesGap = randomInt(60);
-  return dayjs().subtract(daysGap, `day`).subtract(hoursGap, `hour`).subtract(minutesGap, `minute`).toDate();
+  return dayjs().subtract(daysGap, `day`).subtract(hoursGap, `hour`).subtract(minutesGap, `minute`);
 };
 
 const generateComment = () => {
