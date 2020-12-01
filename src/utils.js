@@ -9,3 +9,18 @@ export const copyFilmsArray = (filmsArray) => {
   }
   return copiedArray;
 };
+
+export const sortFilmsBy = (sortType = `rating`, films) => {
+  const copiedArray = copyFilmsArray(films);
+
+  switch (sortType.toLowerCase()) {
+    case `rating`:
+      copiedArray.sort((filmA, filmB) => filmB.rating - filmA.rating);
+      break;
+    case `comments`:
+      copiedArray.sort((filmA, filmB) => filmB.comments.length - filmA.comments.length);
+      break;
+  }
+
+  return copiedArray;
+};

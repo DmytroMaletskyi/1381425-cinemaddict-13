@@ -10,7 +10,7 @@ import {generateFilmsList} from "./mock/film.js";
 import {generateFilter} from "./mock/filter.js";
 import {generateUser} from "./mock/user.js";
 import {createFilmsDetailsPopupTemplate} from "./view/film-details-popup.js";
-import {copyFilmsArray} from "./utils.js";
+import {copyFilmsArray, sortFilmsBy} from "./utils.js";
 
 const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
@@ -67,12 +67,14 @@ if (notDisplayedFilms.length > 0) {
   });
 }
 
-for (let i = FILMS_AMOUNT_PER_STEP; i < FILMS_AMOUNT_PER_STEP + EXTRA_FILMS_AMOUNT; i++) {
-  render(topRatedFilmsContainer, createFilmCardTemplate(films[i]), `beforeend`);
+const filmsSortedByRating = sortFilmsBy(`rating`, films);
+for (let i = 0; i < EXTRA_FILMS_AMOUNT; i++) {
+  render(topRatedFilmsContainer, createFilmCardTemplate(filmsSortedByRating[i]), `beforeend`);
 }
 
-for (let i = FILMS_AMOUNT_PER_STEP + EXTRA_FILMS_AMOUNT; i < FILMS_AMOUNT_PER_STEP + 2 * EXTRA_FILMS_AMOUNT; i++) {
-  render(mostCommentedFilmsContainer, createFilmCardTemplate(films[i]), `beforeend`);
+const filmsSortedByComments = sortFilmsBy(`comments`, films);
+for (let i = 0; i < EXTRA_FILMS_AMOUNT; i++) {
+  render(mostCommentedFilmsContainer, createFilmCardTemplate(filmsSortedByComments[i]), `beforeend`);
 }
 
 render(siteFooterElement, createFilmsCounterTemplate(films.length), `beforeend`);
