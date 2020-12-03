@@ -8,7 +8,7 @@ const createNoFilmsTemplate = () => {
   </section>`;
 };
 
-export default class NoFilmsView {
+export default class NoFilmsTextView {
   constructor() {
     this._element = null;
   }
