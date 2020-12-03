@@ -1,3 +1,5 @@
+import {createElement} from "../utils.js";
+
 const renderGenres = (genres) => {
   let genresList = ``;
   for (let genre of genres) {
@@ -27,7 +29,7 @@ const renderComments = (comments) => {
   return commentsList;
 };
 
-export const createFilmsDetailsPopupTemplate = (film) => {
+const createFilmsDetailsPopupTemplate = (film) => {
   return `<section class="film-details">
     <form class="film-details__inner" action="" method="get">
       <div class="film-details__top-container">
@@ -145,3 +147,27 @@ export const createFilmsDetailsPopupTemplate = (film) => {
     </form>
   </section>`;
 };
+
+export default class PopupView {
+  constructor(film) {
+    this._film = film;
+
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createFilmsDetailsPopupTemplate(this._film);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}

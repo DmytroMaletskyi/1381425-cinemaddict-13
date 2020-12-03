@@ -1,9 +1,11 @@
-export const createStatsSectionTemplate = (user) => {
+import {createElement} from "../utils.js";
+
+const createStatsSectionTemplate = (user) => {
   return `<section class="statistic">
     <p class="statistic__rank">
       Your rank
       <img class="statistic__img" src="images/bitmap@2x.png" alt="Avatar" width="35" height="35">
-      <span class="statistic__rank-label">Sci-Fighter</span>
+      <span class="statistic__rank-label">${user.stats.rank}</span>
     </p>
 
     <form action="https://echo.htmlacademy.ru/" method="get" class="statistic__filters">
@@ -46,3 +48,27 @@ export const createStatsSectionTemplate = (user) => {
 
   </section>`;
 };
+
+export default class StatsSectionView {
+  constructor(user) {
+    this._user = user;
+
+    this._element = null;
+  }
+
+  getTemplate() {
+    return createStatsSectionTemplate(this._user);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
