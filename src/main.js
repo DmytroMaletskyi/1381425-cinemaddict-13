@@ -3,6 +3,7 @@ import SiteMenuView from "./view/site-menu.js";
 import SortView from "./view/film-sort.js";
 import StatsSectionView from "./view/stats-section.js";
 import FilmsSectionView from "./view/films-section.js";
+import NoFilmsTextView from "./view/no-films.js";
 import FilmCardView from "./view/film-card.js";
 import ShowMoreButtonView from "./view/show-more-button.js";
 import FilmsCounterView from "./view/films-counter.js";
@@ -113,8 +114,12 @@ const renderFilmsSection = () => {
 
 renderHeader();
 // renderElement(siteMainElement, new StatsSectionView(user).getElement(), RenderPosition.BEFOREEND);
-renderElement(siteMainElement, new SortView().getElement(), RenderPosition.BEFOREEND);
 
-renderFilmsSection();
+if (films.length === 0) {
+  renderElement(siteMainElement, new NoFilmsTextView().getElement(), RenderPosition.BEFOREEND);
+} else {
+  renderElement(siteMainElement, new SortView().getElement(), RenderPosition.BEFOREEND);
+  renderFilmsSection();
+}
 
 renderElement(siteFooterElement, new FilmsCounterView(films.length).getElement(), RenderPosition.BEFOREEND);
