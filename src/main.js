@@ -81,8 +81,7 @@ const renderFilmsSection = () => {
 
     renderElement(filmsListContainer, ShowMoreButtonComponent.getElement(), RenderPosition.AFTEREND);
 
-    ShowMoreButtonComponent.getElement().addEventListener(`click`, (evt) => {
-      evt.preventDefault();
+    const showMoreClickHandler = () => {
       if (notDisplayedFilms.length > FILMS_AMOUNT_PER_STEP) {
         for (let i = 0; i < FILMS_AMOUNT_PER_STEP; i++) {
           renderFilmCard(filmsListContainer, notDisplayedFilms.shift());
@@ -98,7 +97,9 @@ const renderFilmsSection = () => {
         ShowMoreButtonComponent.getElement().remove();
         ShowMoreButtonComponent.removeElement();
       }
-    });
+    };
+
+    ShowMoreButtonComponent.setClickHandler(showMoreClickHandler);
   }
 
   const filmsSortedByRating = sortFilmsBy(`rating`, films);
