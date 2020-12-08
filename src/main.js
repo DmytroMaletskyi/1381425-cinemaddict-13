@@ -54,13 +54,11 @@ const renderFilmCard = (filmsListContainer, film) => {
     siteBodyElement.classList.add(`hide-overflow`);
     renderElement(siteBodyElement, popupComponent.getElement(), RenderPosition.BEFOREEND);
 
-    popupComponent.getElement().querySelector(`.film-details__close-btn`).addEventListener(`click`, popupCloseHandler);
+    popupComponent.setCloseButtonClickHandler(popupCloseHandler);
     document.addEventListener(`keydown`, onEscKeyDown);
   };
 
-  filmComponent.getElement().querySelector(`.film-card__title`).addEventListener(`click`, popupOpenHandler);
-  filmComponent.getElement().querySelector(`.film-card__poster`).addEventListener(`click`, popupOpenHandler);
-  filmComponent.getElement().querySelector(`.film-card__comments`).addEventListener(`click`, popupOpenHandler);
+  filmComponent.setPopupOpenHandlers(popupOpenHandler);
 
   renderElement(filmsListContainer, filmComponent.getElement(), RenderPosition.BEFOREEND);
 };

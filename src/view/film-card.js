@@ -23,10 +23,28 @@ const createFilmCardTemplate = (film) => {
 export default class FilmCardView extends AbstractView {
   constructor(film) {
     super();
+
     this._film = film;
+    this._popupOpenHandler = this._popupOpenHandler.bind(this);
   }
 
   getTemplate() {
     return createFilmCardTemplate(this._film);
+  }
+
+  _popupOpenHandler(evt) {
+    evt.preventDefault();
+
+    this._callback.click();
+  }
+
+  setPopupOpenHandlers(callback) {
+    this._callback.click = callback;
+
+    const element = this.getElement();
+
+    element.querySelector(`.film-card__title`).addEventListener(`click`, this._popupOpenHandler);
+    element.querySelector(`.film-card__poster`).addEventListener(`click`, this._popupOpenHandler);
+    element.querySelector(`.film-card__comments`).addEventListener(`click`, this._popupOpenHandler);
   }
 }
