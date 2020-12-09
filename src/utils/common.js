@@ -1,22 +1,6 @@
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 
-export const RenderPosition = {
-  AFTEREND: `afterend`,
-  BEFOREEND: `beforeend`
-};
-
-export const renderElement = (container, element, place) => {
-  container.insertAdjacentElement(place, element);
-};
-
-export const createElement = (template) => {
-  const newElement = document.createElement(`div`);
-  newElement.innerHTML = template;
-
-  return newElement.firstChild;
-};
-
 export const copyFilmsArray = (filmsArray) => {
   const copiedArray = JSON.parse(JSON.stringify(filmsArray));
   for (let film of copiedArray) {

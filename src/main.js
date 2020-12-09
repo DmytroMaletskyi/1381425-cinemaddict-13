@@ -11,7 +11,8 @@ import {generateFilmsList} from "./mock/film.js";
 import {generateFilter} from "./mock/filter.js";
 import {generateUser} from "./mock/user.js";
 import PopupView from "./view/film-details-popup.js";
-import {RenderPosition, renderElement, copyFilmsArray, sortFilmsBy} from "./utils.js";
+import {RenderPosition, renderElement, remove} from "./utils/render.js";
+import {copyFilmsArray, sortFilmsBy} from "./utils/common.js";
 
 const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
@@ -27,8 +28,8 @@ const siteMainElement = siteBodyElement.querySelector(`.main`);
 const siteFooterElement = siteBodyElement.querySelector(`.footer`);
 
 const renderHeader = () => {
-  renderElement(siteHeaderElement, new UserRankView(user).getElement(), RenderPosition.BEFOREEND);
-  renderElement(siteMainElement, new SiteMenuView(filters).getElement(), RenderPosition.BEFOREEND);
+  renderElement(siteHeaderElement, new UserRankView(user), RenderPosition.BEFOREEND);
+  renderElement(siteMainElement, new SiteMenuView(filters), RenderPosition.BEFOREEND);
 };
 
 const renderFilmCard = (filmsListContainer, film) => {
@@ -38,8 +39,7 @@ const renderFilmCard = (filmsListContainer, film) => {
   const popupCloseHandler = () => {
     siteBodyElement.classList.remove(`hide-overflow`);
     document.removeEventListener(`keydown`, onEscKeyDown);
-    popupComponent.getElement().remove();
-    popupComponent.removeElement();
+    remove(popupComponent);
   };
 
   const onEscKeyDown = (evt) => {
@@ -52,7 +52,7 @@ const renderFilmCard = (filmsListContainer, film) => {
 
   const popupOpenHandler = () => {
     siteBodyElement.classList.add(`hide-overflow`);
-    renderElement(siteBodyElement, popupComponent.getElement(), RenderPosition.BEFOREEND);
+    renderElement(siteBodyElement, popupComponent, RenderPosition.BEFOREEND);
 
     popupComponent.setCloseButtonClickHandler(popupCloseHandler);
     document.addEventListener(`keydown`, onEscKeyDown);
@@ -60,11 +60,11 @@ const renderFilmCard = (filmsListContainer, film) => {
 
   filmComponent.setPopupOpenHandlers(popupOpenHandler);
 
-  renderElement(filmsListContainer, filmComponent.getElement(), RenderPosition.BEFOREEND);
+  renderElement(filmsListContainer, filmComponent, RenderPosition.BEFOREEND);
 };
 
 const renderFilmsSection = () => {
-  renderElement(siteMainElement, new FilmsSectionView().getElement(), RenderPosition.BEFOREEND);
+  renderElement(siteMainElement, new FilmsSectionView(), RenderPosition.BEFOREEND);
 
   const filmsSectionElement = document.querySelector(`.films`);
   const filmsListsContainers = filmsSectionElement.querySelectorAll(`.films-list__container`);
@@ -77,7 +77,7 @@ const renderFilmsSection = () => {
   if (notDisplayedFilms.length > 0) {
     const ShowMoreButtonComponent = new ShowMoreButtonView();
 
-    renderElement(filmsListContainer, ShowMoreButtonComponent.getElement(), RenderPosition.AFTEREND);
+    renderElement(filmsListContainer, ShowMoreButtonComponent, RenderPosition.AFTEREND);
 
     const showMoreClickHandler = () => {
       if (notDisplayedFilms.length > FILMS_AMOUNT_PER_STEP) {
@@ -92,8 +92,7 @@ const renderFilmsSection = () => {
       }
 
       if (notDisplayedFilms.length === 0) {
-        ShowMoreButtonComponent.getElement().remove();
-        ShowMoreButtonComponent.removeElement();
+        remove(ShowMoreButtonComponent);
       }
     };
 
@@ -112,13 +111,13 @@ const renderFilmsSection = () => {
 };
 
 renderHeader();
-// renderElement(siteMainElement, new StatsSectionView(user).getElement(), RenderPosition.BEFOREEND);
+// renderElement(siteMainElement, new StatsSectionView(user), RenderPosition.BEFOREEND);
 
 if (films.length === 0) {
-  renderElement(siteMainElement, new NoFilmsTextView().getElement(), RenderPosition.BEFOREEND);
+  renderElement(siteMainElement, new NoFilmsTextView(), RenderPosition.BEFOREEND);
 } else {
-  renderElement(siteMainElement, new SortView().getElement(), RenderPosition.BEFOREEND);
+  renderElement(siteMainElement, new SortView(), RenderPosition.BEFOREEND);
   renderFilmsSection();
 }
 
-renderElement(siteFooterElement, new FilmsCounterView(films.length).getElement(), RenderPosition.BEFOREEND);
+renderElement(siteFooterElement, new FilmsCounterView(films.length), RenderPosition.BEFOREEND);
