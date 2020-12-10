@@ -1,4 +1,4 @@
-import {createElement} from "../utils.js";
+import AbstractView from "./abstract.js";
 
 const renderGenres = (genres) => {
   let genresList = ``;
@@ -148,26 +148,26 @@ const createFilmsDetailsPopupTemplate = (film) => {
   </section>`;
 };
 
-export default class PopupView {
+export default class PopupView extends AbstractView {
   constructor(film) {
+    super();
     this._film = film;
-
-    this._element = null;
+    this._closeButtonClickHandler = this._closeButtonClickHandler.bind(this);
   }
 
   getTemplate() {
     return createFilmsDetailsPopupTemplate(this._film);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
+  _closeButtonClickHandler(evt) {
+    evt.preventDefault();
 
-    return this._element;
+    this._callback.clickCloseButton();
   }
 
-  removeElement() {
-    this._element = null;
+  setCloseButtonClickHandler(callback) {
+    this._callback.clickCloseButton = callback;
+
+    this.getElement().querySelector(`.film-details__close-btn`).addEventListener(`click`, this._closeButtonClickHandler);
   }
 }
