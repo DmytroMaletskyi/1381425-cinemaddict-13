@@ -94,7 +94,7 @@ const createFilmsDetailsPopupTemplate = (film) => {
         </div>
 
         <section class="film-details__controls">
-          <input type="checkbox" class="film-details__control-input visually-hidden" id="watchlist" name="watchlist" ${film.isInWatchList ? `checked` : ``}>
+          <input type="checkbox" class="film-details__control-input visually-hidden" id="watchlist" name="watchlist" ${film.isInWatchlist ? `checked` : ``}>
           <label for="watchlist" class="film-details__control-label film-details__control-label--watchlist">Add to watchlist</label>
 
           <input type="checkbox" class="film-details__control-input visually-hidden" id="watched" name="watched" ${film.isWatched ? `checked` : ``}>
@@ -151,8 +151,12 @@ const createFilmsDetailsPopupTemplate = (film) => {
 export default class PopupView extends AbstractView {
   constructor(film) {
     super();
+
     this._film = film;
     this._closeButtonClickHandler = this._closeButtonClickHandler.bind(this);
+    this._addToWatchlistHandler = this._addToWatchlistHandler.bind(this);
+    this._markAsWatchedHandler = this._markAsWatchedHandler.bind(this);
+    this._addToFavoriteHandler = this._addToFavoriteHandler.bind(this);
   }
 
   getTemplate() {
@@ -169,5 +173,41 @@ export default class PopupView extends AbstractView {
     this._callback.clickCloseButton = callback;
 
     this.getElement().querySelector(`.film-details__close-btn`).addEventListener(`click`, this._closeButtonClickHandler);
+  }
+
+  _addToWatchlistHandler() {
+    this._callback.addToWatchList();
+  }
+
+  setAddtoWatchlistClickHandler(callback) {
+    this._callback.addToWatchList = callback;
+
+    const element = this.getElement();
+
+    element.querySelector(`.film-details__control-label--watchlist`).addEventListener(`click`, this._addToWatchlistHandler);
+  }
+
+  _markAsWatchedHandler() {
+    this._callback.markAsWatched();
+  }
+
+  setMarkAsWatchedClickHandler(callback) {
+    this._callback.markAsWatched = callback;
+
+    const element = this.getElement();
+
+    element.querySelector(`.film-details__control-label--watched`).addEventListener(`click`, this._markAsWatchedHandler);
+  }
+
+  _addToFavoriteHandler() {
+    this._callback.addToFavorite();
+  }
+
+  setAddToFavoriteClickHandler(callback) {
+    this._callback.addToFavorite = callback;
+
+    const element = this.getElement();
+
+    element.querySelector(`.film-details__control-label--favorite`).addEventListener(`click`, this._addToFavoriteHandler);
   }
 }
