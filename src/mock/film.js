@@ -13,6 +13,8 @@ const ACTORS_MAX = 5;
 const GENRES_MAX = 3;
 const FILMS_MAX = 23;
 
+const generateId = () => Date.now() + parseInt(Math.random() * 10000, 10);
+
 const random = (a = 1, b = 0) => {
   const lower = Math.min(a, b);
   const upper = Math.max(a, b);
@@ -62,6 +64,7 @@ const generateReleaseDate = () => {
 const generateFilm = () => {
   const filmName = getRandomElement(FILMS_NAMES);
   return {
+    id: generateId(),
     name: filmName,
     originalName: filmName,
     poster: getRandomElement(POSTERS),
