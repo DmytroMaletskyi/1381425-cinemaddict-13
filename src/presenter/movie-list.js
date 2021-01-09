@@ -7,6 +7,7 @@ import ShowMoreButtonView from "../view/show-more-button.js";
 import PopupView from "../view/film-details-popup.js";
 import {RenderPosition, renderElement, remove} from "../utils/render.js";
 import {sortFilmsBy, updateItem} from "../utils/common.js";
+import {SortType} from "../const.js";
 
 const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
@@ -18,6 +19,7 @@ export default class MovieList {
     this._renderedFilmsCount = FILMS_AMOUNT_PER_STEP;
     this._renderedFilms = {};
     this._openedPopup = ``;
+    this._currentSortType = SortType.DEFAULT;
 
     this._filmsSectionComponent = new FilmsSectionView();
     this._statsSectionComponent = new StatsSectionView();
@@ -27,10 +29,12 @@ export default class MovieList {
 
     this._handleFilmChange = this._handleFilmChange.bind(this);
     this._handleShowMoreButtonClick = this._handleShowMoreButtonClick.bind(this);
+    this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
   }
 
   init(films) {
     this._films = films.slice();
+    this._sourcedFilms = films.slice();
 
     this._renderMovieSection();
   }
@@ -111,7 +115,10 @@ export default class MovieList {
     filmComponent.setPopupOpenHandlers(popupOpenHandler);
 
     renderElement(container, filmComponent, RenderPosition.BEFOREEND);
-    this._renderedFilms[film.id] = filmComponent;
+
+    if (container === this._filmsListContainer) {
+      this._renderedFilms[film.id] = filmComponent;
+    }
   }
 
   _renderFilms(from, to) {
@@ -121,10 +128,10 @@ export default class MovieList {
   _renderTopFilmsComponent(topType) {
     let topFilmsContainer;
     switch (topType) {
-      case `rating`:
+      case SortType.RATING:
         topFilmsContainer = this._topRatedFilmsContainer;
         break;
-      case `comments`:
+      case SortType.COMMENTS:
         topFilmsContainer = this._mostCommentedFilmsContainer;
         break;
     }
@@ -165,8 +172,32 @@ export default class MovieList {
     renderElement(this._mainContainer, this._noFilmsTextComponent, RenderPosition.BEFOREEND);
   }
 
+  _sortFilms(sortType) {
+    switch (sortType) {
+      case SortType.RATING:
+      case SortType.DATE:
+        this._films = sortFilmsBy(sortType, this._films);
+        break;
+      default:
+        this._films = this._sourcedFilms.slice();
+    }
+
+    this._currentSortType = sortType;
+  }
+
+  _handleSortTypeChange(sortType) {
+    if (this._currentSortType === sortType) {
+      return;
+    }
+
+    this._sortFilms(sortType);
+    this._clearMainFilmsComponent();
+    this._renderMainFilmsComponent();
+  }
+
   _renderSortComponent() {
     renderElement(this._mainContainer, this._sortComponent, RenderPosition.BEFOREEND);
+    this._sortComponent.setSortTypeChangeHandler(this._handleSortTypeChange);
   }
 
   _renderMainFilmsComponent() {
@@ -175,6 +206,13 @@ export default class MovieList {
     if (this._films.length > FILMS_AMOUNT_PER_STEP) {
       this._renderShowMoreButtonComponent();
     }
+  }
+
+  _clearMainFilmsComponent() {
+    Object.values(this._renderedFilms).forEach((film) => remove(film));
+    this._renderedFilms = {};
+    this._renderedFilmsCount = FILMS_AMOUNT_PER_STEP;
+    remove(this._showMoreButtonComponent);
   }
 
   _renderStatsComponent() {
