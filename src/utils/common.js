@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import {SortType} from "../const.js";
 
 export const copyFilmsArray = (filmsArray) => {
   const copiedArray = JSON.parse(JSON.stringify(filmsArray));
@@ -13,15 +14,18 @@ export const copyFilmsArray = (filmsArray) => {
   return copiedArray;
 };
 
-export const sortFilmsBy = (sortType = `rating`, films) => {
+export const sortFilmsBy = (sortType = SortType.RATING, films) => {
   const copiedArray = copyFilmsArray(films);
 
-  switch (sortType.toLowerCase()) {
-    case `rating`:
+  switch (sortType) {
+    case SortType.RATING:
       copiedArray.sort((filmA, filmB) => filmB.rating - filmA.rating);
       break;
-    case `comments`:
+    case SortType.COMMENTS:
       copiedArray.sort((filmA, filmB) => filmB.comments.length - filmA.comments.length);
+      break;
+    case SortType.DATE:
+      copiedArray.sort((filmA, filmB) => filmB.releaseDate - filmA.releaseDate);
       break;
   }
 
