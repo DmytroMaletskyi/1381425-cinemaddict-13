@@ -1,4 +1,6 @@
-import AbstractView from "./abstract.js";
+// import AbstractView from "./abstract.js";
+import SmartView from "./smart.js";
+
 
 const createFilmCardTemplate = (film) => {
   return `<article class="film-card">
@@ -20,7 +22,7 @@ const createFilmCardTemplate = (film) => {
   </article>`;
 };
 
-export default class FilmCardView extends AbstractView {
+export default class FilmCardView extends SmartView {
   constructor(film) {
     super();
 
@@ -29,10 +31,28 @@ export default class FilmCardView extends AbstractView {
     this._addToWatchlistHandler = this._addToWatchlistHandler.bind(this);
     this._markAsWatchedHandler = this._markAsWatchedHandler.bind(this);
     this._addToFavoriteHandler = this._addToFavoriteHandler.bind(this);
+
+    this._setInnerHandlers();
+  }
+
+  restoreHandlers() {
+    this._setInnerHandlers();
+  }
+
+  _setInnerHandlers() {
+    const element = this.getElement();
+
+    element.querySelector(`.film-card__title`).addEventListener(`click`, this._popupOpenHandler);
+    element.querySelector(`.film-card__poster`).addEventListener(`click`, this._popupOpenHandler);
+    element.querySelector(`.film-card__comments`).addEventListener(`click`, this._popupOpenHandler);
   }
 
   getTemplate() {
     return createFilmCardTemplate(this._film);
+  }
+
+  updateFilmData(newData) {
+    this._film = newData;
   }
 
   _popupOpenHandler(evt) {
@@ -49,6 +69,9 @@ export default class FilmCardView extends AbstractView {
     element.querySelector(`.film-card__title`).addEventListener(`click`, this._popupOpenHandler);
     element.querySelector(`.film-card__poster`).addEventListener(`click`, this._popupOpenHandler);
     element.querySelector(`.film-card__comments`).addEventListener(`click`, this._popupOpenHandler);
+    element.querySelector(`.film-card__controls-item--add-to-watchlist`).addEventListener(`click`, this._addToWatchlistHandler);
+    element.querySelector(`.film-card__controls-item--mark-as-watched`).addEventListener(`click`, this._markAsWatchedHandler);
+    element.querySelector(`.film-card__controls-item--favorite`).addEventListener(`click`, this._addToFavoriteHandler);
   }
 
   _commonButtonClickHandler(evt) {
