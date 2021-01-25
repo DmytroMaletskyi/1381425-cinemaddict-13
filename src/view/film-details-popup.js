@@ -1,4 +1,6 @@
-import AbstractView from "./abstract.js";
+import SmartView from "./smart.js";
+import {createElement} from "../utils/render.js";
+import dayjs from "dayjs";
 
 const renderGenres = (genres) => {
   let genresList = ``;
@@ -148,7 +150,7 @@ const createFilmsDetailsPopupTemplate = (film) => {
   </section>`;
 };
 
-export default class PopupView extends AbstractView {
+export default class PopupView extends SmartView {
   constructor(film) {
     super();
 
@@ -157,10 +159,79 @@ export default class PopupView extends AbstractView {
     this._addToWatchlistHandler = this._addToWatchlistHandler.bind(this);
     this._markAsWatchedHandler = this._markAsWatchedHandler.bind(this);
     this._addToFavoriteHandler = this._addToFavoriteHandler.bind(this);
+    this._ctrlEnterKeyPressHandler = this._ctrlEnterKeyPressHandler.bind(this);
+    this._emojiClickHandler = this._emojiClickHandler.bind(this);
+
+    this._setInnerHandlers();
   }
 
   getTemplate() {
     return createFilmsDetailsPopupTemplate(this._film);
+  }
+
+  restoreHandlers() {
+    this._setInnerHandlers();
+    this.setCloseButtonClickHandler(this._callback.clickCloseButton);
+  }
+
+  _setInnerHandlers() {
+    this.getElement().querySelector(`.film-details__emoji-list`)
+      .addEventListener(`click`, this._emojiClickHandler);
+  }
+
+  _emojiClickHandler(evt) {
+    if (evt.target.type !== `radio`) {
+      return;
+    }
+
+    const emojiContainer = this.getElement().querySelector(`.film-details__add-emoji-label`);
+    this._emoji = evt.target.value;
+    emojiContainer.innerHTML = ``;
+    const emojiImage = createElement(`<img src="./images/emoji/${this._emoji}.png" width="55" height="55" alt="${this._emoji}">`);
+    emojiContainer.appendChild(emojiImage);
+  }
+
+  _scollToPopupBottom() {
+    this.getElement().scroll(0, this.getElement().offsetHeight);
+  }
+
+  _submitComment() {
+    const commentInput = this.getElement().querySelector(`.film-details__comment-input`);
+    const initialComments = this._film.comments.slice();
+
+    if (this._emoji && commentInput.value !== ``) {
+      initialComments.push({
+        text: commentInput.value,
+        emotion: this._emoji,
+        author: `anonymous`,
+        date: dayjs()
+      });
+
+      this.updateData({
+        comments: initialComments
+      });
+
+      this._emoji = ``;
+      this._scollToPopupBottom();
+    }
+  }
+
+  _ctrlEnterKeyPressHandler(evt) {
+    if (evt.ctrlKey && evt.keyCode === 13) {
+      evt.preventDefault();
+      this._submitComment();
+      this._callback.pressCtrlEnterKey(this._film);
+    }
+  }
+
+  setCtrlEnterPressHandler(callback) {
+    this._callback.pressCtrlEnterKey = callback;
+
+    document.addEventListener(`keydown`, this._ctrlEnterKeyPressHandler);
+  }
+
+  removeCtrlEnterPressHandler() {
+    document.removeEventListener(`keydown`, this._ctrlEnterKeyPressHandler);
   }
 
   _closeButtonClickHandler(evt) {
