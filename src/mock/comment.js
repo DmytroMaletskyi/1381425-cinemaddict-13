@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import {generateId} from "../utils/common.js";
 
 const EMOTIONS = [`smile`, `sleeping`, `puke`, `angry`];
 const AUTHOR_NAMES = [`Ann`, `Bob`, `John`, `Jane`, `Gil`, `Max`, `Nick`, `Liam`, `Oliver`, `William`];
@@ -11,6 +12,8 @@ const randomInt = (a = 1, b = 0) => {
   const upper = Math.floor(Math.max(a, b));
   return Math.floor(lower + Math.random() * (upper - lower + 1));
 };
+
+// const generateId = () => Date.now() + parseInt(Math.random() * 10000, 10);
 
 const getRandomElement = (elementsList) => {
   return elementsList[randomInt(elementsList.length - 1)];
@@ -25,6 +28,7 @@ const generateCommentDate = () => {
 
 const generateComment = () => {
   return {
+    id: generateId(),
     text: getRandomElement(COMMENTS_TEXTS),
     emotion: getRandomElement(EMOTIONS),
     author: `${getRandomElement(AUTHOR_NAMES)} ${getRandomElement(AUTHOR_SURNAMES)}`,

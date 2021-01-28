@@ -1,24 +1,53 @@
 import AbstractView from "./abstract.js";
 
-const createSiteMenuTemplate = (filters) => {
+const createFilterItemTemplate = (filter, currentFilterType) => {
+  const {type, name, count} = filter;
+
+  return (
+    `<a
+    href="#${type}"
+    class="main-navigation__item
+    ${type === currentFilterType ? `main-navigation__item--active` : ``}"
+    data-filter-type="${type}">
+    ${name}
+    ${type === `all` ? `` : `<span class="main-navigation__item-count">${count}</span>`}
+    </a>`
+  );
+};
+
+const createSiteMenuTemplate = (filters, currentFilterType) => {
+  const filterItemsTemplate = filters
+  .map((filter) => createFilterItemTemplate(filter, currentFilterType))
+  .join(``);
+
   return `<nav class="main-navigation">
     <div class="main-navigation__items">
-      <a href="#all" class="main-navigation__item main-navigation__item--active">All movies</a>
-      <a href="#watchlist" class="main-navigation__item">Watchlist <span class="main-navigation__item-count">${filters.watchlist}</span></a>
-      <a href="#history" class="main-navigation__item">History <span class="main-navigation__item-count">${filters.history}</span></a>
-      <a href="#favorites" class="main-navigation__item">Favorites <span class="main-navigation__item-count">${filters.favorite}</span></a>
+      ${filterItemsTemplate}
     </div>
     <a href="#stats" class="main-navigation__additional">Stats</a>
   </nav>`;
 };
 
 export default class SiteMenuView extends AbstractView {
-  constructor(filters) {
+  constructor(filters, currentFilterType) {
     super();
     this._filters = filters;
+    this._currentFilter = currentFilterType;
+
+    this._filterTypeChangeHandler = this._filterTypeChangeHandler.bind(this);
   }
 
   getTemplate() {
-    return createSiteMenuTemplate(this._filters);
+    return createSiteMenuTemplate(this._filters, this._currentFilter);
+  }
+
+  _filterTypeChangeHandler(evt) {
+    evt.preventDefault();
+    this._callback.filterTypeChange(evt.target.dataset.filterType);
+  }
+
+  setFilterTypeChangeHandler(callback) {
+    this._callback.filterTypeChange = callback;
+    this.getElement().addEventListener(`click`, this._filterTypeChangeHandler);
   }
 }

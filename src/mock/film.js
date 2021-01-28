@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import {generateId} from "../utils/common.js";
 import {generateCommentsList} from "./comment.js";
 
 const FILMS_NAMES = [`Made for each other`, `Popeye meets Sindbad`, `Sagebrush Trail`, `Santa Claus Conquers the Marthians`, `The Dance of Life`, `The Great Flamarion`, `The man with the golden arm`];
@@ -13,7 +14,7 @@ const ACTORS_MAX = 5;
 const GENRES_MAX = 3;
 const FILMS_MAX = 23;
 
-const generateId = () => Date.now() + parseInt(Math.random() * 10000, 10);
+// const generateId = () => (Date.now() + parseInt(Math.random() * 10000, 10)).toString();
 
 const random = (a = 1, b = 0) => {
   const lower = Math.min(a, b);
