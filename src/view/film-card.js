@@ -2,7 +2,7 @@
 import SmartView from "./smart.js";
 
 
-const createFilmCardTemplate = (film) => {
+const createFilmCardTemplate = (film, comments) => {
   return `<article class="film-card">
     <h3 class="film-card__title">${film.name}</h3>
     <p class="film-card__rating">${film.rating}</p>
@@ -13,7 +13,7 @@ const createFilmCardTemplate = (film) => {
     </p>
     <img src="./images/posters/${film.poster}" alt="" class="film-card__poster">
     <p class="film-card__description">${(film.description.length > 140) ? `${film.description.substring(0, 140)}...` : film.description}</p>
-    <a class="film-card__comments">${(film.comments.length === 1) ? `${film.comments.length} comment` : `${film.comments.length} comments`}</a>
+    <a class="film-card__comments">${(comments.length === 1) ? `${comments.length} comment` : `${comments.length} comments`}</a>
     <div class="film-card__controls">
       <button class="film-card__controls-item button film-card__controls-item--add-to-watchlist ${film.isInWatchlist ? `film-card__controls-item--active` : ``}" type="button">Add to watchlist</button>
       <button class="film-card__controls-item button film-card__controls-item--mark-as-watched ${film.isWatched ? `film-card__controls-item--active` : ``}" type="button">Mark as watched</button>
@@ -23,10 +23,11 @@ const createFilmCardTemplate = (film) => {
 };
 
 export default class FilmCardView extends SmartView {
-  constructor(film) {
+  constructor(film, commentsModel) {
     super();
 
     this._film = film;
+    this._commentsModel = commentsModel;
     this._popupOpenHandler = this._popupOpenHandler.bind(this);
     this._addToWatchlistHandler = this._addToWatchlistHandler.bind(this);
     this._markAsWatchedHandler = this._markAsWatchedHandler.bind(this);
@@ -45,10 +46,13 @@ export default class FilmCardView extends SmartView {
     element.querySelector(`.film-card__title`).addEventListener(`click`, this._popupOpenHandler);
     element.querySelector(`.film-card__poster`).addEventListener(`click`, this._popupOpenHandler);
     element.querySelector(`.film-card__comments`).addEventListener(`click`, this._popupOpenHandler);
+    element.querySelector(`.film-card__controls-item--add-to-watchlist`).addEventListener(`click`, this._addToWatchlistHandler);
+    element.querySelector(`.film-card__controls-item--mark-as-watched`).addEventListener(`click`, this._markAsWatchedHandler);
+    element.querySelector(`.film-card__controls-item--favorite`).addEventListener(`click`, this._addToFavoriteHandler);
   }
 
   getTemplate() {
-    return createFilmCardTemplate(this._film);
+    return createFilmCardTemplate(this._film, this._commentsModel.getFilmComments(this._film.id));
   }
 
   updateFilmData(newData) {
@@ -69,9 +73,6 @@ export default class FilmCardView extends SmartView {
     element.querySelector(`.film-card__title`).addEventListener(`click`, this._popupOpenHandler);
     element.querySelector(`.film-card__poster`).addEventListener(`click`, this._popupOpenHandler);
     element.querySelector(`.film-card__comments`).addEventListener(`click`, this._popupOpenHandler);
-    element.querySelector(`.film-card__controls-item--add-to-watchlist`).addEventListener(`click`, this._addToWatchlistHandler);
-    element.querySelector(`.film-card__controls-item--mark-as-watched`).addEventListener(`click`, this._markAsWatchedHandler);
-    element.querySelector(`.film-card__controls-item--favorite`).addEventListener(`click`, this._addToFavoriteHandler);
   }
 
   _commonButtonClickHandler(evt) {
@@ -98,8 +99,7 @@ export default class FilmCardView extends SmartView {
     element.querySelector(target).classList.toggle(`film-card__controls-item--active`);
   }
 
-  _addToWatchlistHandler(evt) {
-    this._commonButtonClickHandler(evt);
+  _addToWatchlistHandler() {
     this._callback.addToWatchList();
   }
 
@@ -111,8 +111,7 @@ export default class FilmCardView extends SmartView {
     element.querySelector(`.film-card__controls-item--add-to-watchlist`).addEventListener(`click`, this._addToWatchlistHandler);
   }
 
-  _markAsWatchedHandler(evt) {
-    this._commonButtonClickHandler(evt);
+  _markAsWatchedHandler() {
     this._callback.markAsWatched();
   }
 
@@ -124,8 +123,7 @@ export default class FilmCardView extends SmartView {
     element.querySelector(`.film-card__controls-item--mark-as-watched`).addEventListener(`click`, this._markAsWatchedHandler);
   }
 
-  _addToFavoriteHandler(evt) {
-    this._commonButtonClickHandler(evt);
+  _addToFavoriteHandler() {
     this._callback.addToFavorite();
   }
 

@@ -2,6 +2,8 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import {SortType} from "../const.js";
 
+export const generateId = () => (Date.now() + parseInt(Math.random() * 10000, 10)).toString();
+
 export const copyFilmsArray = (filmsArray) => {
   const copiedArray = JSON.parse(JSON.stringify(filmsArray));
   for (let film of copiedArray) {
@@ -30,6 +32,18 @@ export const sortFilmsBy = (sortType = SortType.RATING, films) => {
   }
 
   return copiedArray;
+};
+
+export const sortFilmsByRating = (filmA, filmB) => {
+  return filmB.rating - filmA.rating;
+};
+
+export const sortFilmsByDate = (filmA, filmB) => {
+  return filmB.releaseDate - filmA.releaseDate;
+};
+
+export const sortFilmsByComments = (filmA, filmB) => {
+  return filmB[1].length - filmA[1].length;
 };
 
 export const updateItem = (items, updatedItem) => {
