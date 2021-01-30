@@ -18,8 +18,8 @@ export default class Films extends Observer {
     return this._films;
   }
 
-  getFilm(film) {
-    return this._films[this._films.findIndex((filmItem) => filmItem.id === film.id)];
+  getFilm(filmId) {
+    return this._films[this._films.findIndex((filmItem) => filmItem.id === filmId)];
   }
 
   updateFilm(updateType, update) {

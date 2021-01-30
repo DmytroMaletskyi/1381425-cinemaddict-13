@@ -19,6 +19,12 @@ import dayjs from "dayjs";
 const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
 
+export const PopupState = {
+  SUBMITTING: `SUBMITTING`,
+  DELETING: `DELETING`,
+  ABORTING: `ABORTING`
+};
+
 export default class MovieList {
   constructor(page, mainContainer, filmsModel, commentsModel, filtersModel, api) {
     this._filmsModel = filmsModel;
@@ -81,18 +87,76 @@ export default class MovieList {
     this._renderMovieSection();
   }
 
+  setViewState(state) {
+    const resetViewState = () => {
+      this._openedPopup.updateData({
+        isSubmitting: false,
+        isDeleting: false
+      });
+    };
+    switch (state) {
+      case PopupState.SUBMITTING:
+        this._openedPopup.updateData({
+          isSubmitting: true
+        });
+        break;
+      case PopupState.DELETING:
+        this._openedPopup.updateData({
+          isDeleting: true
+        });
+        break;
+      case PopupState.ABORTING:
+        this._openedPopup.shake(resetViewState);
+        break;
+    }
+  }
+
   _handleViewAction(actionType, updateType, update, filmId) {
     switch (actionType) {
       case UserAction.UPDATE_FILM:
-        this._api.updateFilm(update).then((response) => {
+        this._api.updateFilm(update)
+        .then((response) => {
           this._filmsModel.updateFilm(updateType, response);
         });
         break;
       case UserAction.ADD_COMMENT:
-        this._commentsModel.addComment(updateType, filmId, update);
+        this.setViewState(PopupState.SUBMITTING);
+        this._api.addComment(this._filmsModel.getFilm(filmId), update).then((response) => {
+          this._filmsModel.updateFilm(UpdateType.NONE, Object.assign(
+              {},
+              this._filmsModel.getFilm(filmId),
+              {
+                comments: [
+                  ...this._filmsModel.getFilm(filmId).comments,
+                  response.id
+                ]
+              }
+          ));
+          this._commentsModel.addComment(updateType, filmId, response);
+        })
+        .catch(() => {
+          this.setViewState(PopupState.ABORTING);
+        });
         break;
       case UserAction.DELETE_COMMENT:
-        this._commentsModel.deleteComment(updateType, filmId, update);
+        this.setViewState(PopupState.DELETING);
+        this._api.deleteComment(update).then(() => {
+          const index = this._filmsModel.getFilm(filmId).comments.findIndex((commentId) => commentId === update);
+          this._filmsModel.updateFilm(UpdateType.NONE, Object.assign(
+              {},
+              this._filmsModel.getFilm(filmId),
+              {
+                comments: [
+                  ...this._filmsModel.getFilm(filmId).comments.slice(0, index),
+                  ...this._filmsModel.getFilm(filmId).comments.slice(index + 1)
+                ]
+              }
+          ));
+          this._commentsModel.deleteComment(updateType, filmId, update);
+        })
+        .catch(() => {
+          this.setViewState(PopupState.ABORTING);
+        });
         break;
     }
   }
@@ -174,7 +238,7 @@ export default class MovieList {
         this._renderTopFilmsComponent(`rating`);
         if (this._openedPopup) {
           this._openedPopup.updateElement();
-          this._openedPopup.scollToPopupBottom();
+          this._openedPopup.scrollToPopupBottom();
         }
         break;
 
