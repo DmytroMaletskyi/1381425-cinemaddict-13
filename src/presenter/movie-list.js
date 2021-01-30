@@ -5,22 +5,30 @@ import NoFilmsTextView from "../view/no-films.js";
 import FilmCardView from "../view/film-card.js";
 import ShowMoreButtonView from "../view/show-more-button.js";
 import PopupView from "../view/film-details-popup.js";
+import LoadingView from "../view/loading.js";
+import FilmsCounterView from "../view/films-counter.js";
+import UserRankView from "../view/user-rank.js";
 import {filter} from "../utils/filter.js";
 import {RenderPosition, renderElement, remove} from "../utils/render.js";
 import {sortFilmsByRating, sortFilmsByDate, sortFilmsByComments} from "../utils/common.js";
 import {SortType} from "../const.js";
 import {UserAction, UpdateType} from "../const.js";
+import {generateUser} from "../mock/user.js";
+import dayjs from "dayjs";
 
 const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
 
 export default class MovieList {
-  constructor(page, mainContainer, filmsModel, commentsModel, filtersModel) {
+  constructor(page, mainContainer, filmsModel, commentsModel, filtersModel, api) {
     this._filmsModel = filmsModel;
     this._commentsModel = commentsModel;
     this._filtersModel = filtersModel;
+    this._api = api;
     this._page = page;
     this._mainContainer = mainContainer;
+    this._headerContainer = page.querySelector(`.header`);
+    this._footerContainer = page.querySelector(`.footer`);
     this._renderedFilmsCount = FILMS_AMOUNT_PER_STEP;
     this._renderedFilms = {};
     this._renderedTopRatedFilms = {};
@@ -28,13 +36,16 @@ export default class MovieList {
     this._renderedFilmsData = {};
     this._openedPopup = ``;
     this._currentSortType = SortType.DEFAULT;
-    this._currentFilter = ``;
+    this._isLoading = true;
 
+    this._loadingComponent = new LoadingView();
     this._filmsSectionComponent = new FilmsSectionView();
     this._statsSectionComponent = new StatsSectionView();
     this._showMoreButtonComponent = null;
     this._noFilmsTextComponent = new NoFilmsTextView();
     this._sortComponent = null;
+    this._filmsCounterComponent = new FilmsCounterView(0);
+    this._userRankComponent = null;
 
     this._handleViewAction = this._handleViewAction.bind(this);
     this._handleModelEvent = this._handleModelEvent.bind(this);
@@ -60,12 +71,7 @@ export default class MovieList {
       case SortType.DATE:
         return films.sort(sortFilmsByDate);
       case SortType.COMMENTS:
-        const sortedComments = Object.entries(this._commentsModel.getComments()).sort(sortFilmsByComments);
-        const sortedFilms = [];
-        sortedComments.forEach((comment) => {
-          sortedFilms.push(films[films.findIndex((film) => film.id === comment[0])]);
-        });
-        return sortedFilms;
+        return films.sort(sortFilmsByComments);
     }
 
     return films;
@@ -78,7 +84,9 @@ export default class MovieList {
   _handleViewAction(actionType, updateType, update, filmId) {
     switch (actionType) {
       case UserAction.UPDATE_FILM:
-        this._filmsModel.updateFilm(updateType, update);
+        this._api.updateFilm(update).then((response) => {
+          this._filmsModel.updateFilm(updateType, response);
+        });
         break;
       case UserAction.ADD_COMMENT:
         this._commentsModel.addComment(updateType, filmId, update);
@@ -90,12 +98,14 @@ export default class MovieList {
   }
 
   _updateFilmData(dataId) {
+    // Если фильм сейчас отфильтрован - обновляем в фильтре, если нет во всех фильмах обходя фильтр
     if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
       this._renderedFilmsData[dataId] = this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)];
     } else {
       this._renderedFilmsData[dataId] = this._getFilms(true)[this._getFilms(true).findIndex((filmItem) => filmItem.id === dataId)];
     }
 
+    // Если фильм отрисован в основной секции и он попадает под теперешний фильтр - апдейт, если больше не попадает, то перерисовываем список
     if (this._renderedFilms[dataId]) {
       if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
         this._renderedFilms[dataId].updateFilmData(this._renderedFilmsData[dataId]);
@@ -127,7 +137,7 @@ export default class MovieList {
   _handleModelEvent(updateType, data, filmId) {
     if (filmId) {
       this._updateFilmData(filmId);
-    } else {
+    } else if (data) {
       this._updateFilmData(data.id);
     }
 
@@ -150,7 +160,7 @@ export default class MovieList {
 
       case UpdateType.MINOR:
         // Update main list
-        this._clearMovieSection();
+        this._clearMovieSection({resetRenderedFilmsCount: true, resetSortType: true});
         this._renderMainFilmsSection();
         break;
 
@@ -167,6 +177,12 @@ export default class MovieList {
           this._openedPopup.scollToPopupBottom();
         }
         break;
+
+      case UpdateType.INIT:
+        this._isLoading = false;
+        remove(this._loadingComponent);
+        remove(this._filmsCounterComponent);
+        this._renderMovieSection();
     }
   }
 
@@ -202,6 +218,7 @@ export default class MovieList {
               {},
               this._renderedFilmsData[film.id],
               {
+                watchingDate: !this._renderedFilmsData[film.id].isWatched ? dayjs() : null,
                 isWatched: !this._renderedFilmsData[film.id].isWatched
               }
           )
@@ -243,38 +260,42 @@ export default class MovieList {
       if (this._openedPopup) {
         popupCloseHandler();
       }
-      this._page.classList.add(`hide-overflow`);
-      this._openedPopup = new PopupView(this._renderedFilmsData[film.id], this._commentsModel);
-      renderElement(this._page, this._openedPopup, RenderPosition.BEFOREEND);
+      this._api.getComments(film.id)
+        .then((comments) => {
+          this._commentsModel.setComments(film.id, comments);
+          this._page.classList.add(`hide-overflow`);
+          this._openedPopup = new PopupView(this._renderedFilmsData[film.id], this._commentsModel);
+          renderElement(this._page, this._openedPopup, RenderPosition.BEFOREEND);
 
-      const handleCommentDelete = (commentId) => {
-        this._handleViewAction(
-            UserAction.DELETE_COMMENT,
-            UpdateType.MAJOR,
-            commentId,
-            film.id
-        );
-      };
+          const handleCommentDelete = (commentId) => {
+            this._handleViewAction(
+                UserAction.DELETE_COMMENT,
+                UpdateType.MAJOR,
+                commentId,
+                film.id
+            );
+          };
 
-      const handleCommentSubmit = () => {
-        const newComment = this._openedPopup.getNewComment();
-        if (newComment) {
-          this._handleViewAction(
-              UserAction.ADD_COMMENT,
-              UpdateType.MAJOR,
-              newComment,
-              film.id
-          );
-        }
-      };
+          const handleCommentSubmit = () => {
+            const newComment = this._openedPopup.getNewComment();
+            if (newComment) {
+              this._handleViewAction(
+                  UserAction.ADD_COMMENT,
+                  UpdateType.MAJOR,
+                  newComment,
+                  film.id
+              );
+            }
+          };
 
-      this._openedPopup.setAddtoWatchlistClickHandler(handleAddToWatchlistClick);
-      this._openedPopup.setMarkAsWatchedClickHandler(handleMarkAsWatchedClick);
-      this._openedPopup.setAddToFavoriteClickHandler(handleAddToFavoriteClick);
-      this._openedPopup.setDeleteCommentClickHandler(handleCommentDelete);
-      this._openedPopup.setCloseButtonClickHandler(popupCloseHandler);
-      this._openedPopup.setCtrlEnterPressHandler(handleCommentSubmit);
-      document.addEventListener(`keydown`, onEscKeyDown);
+          this._openedPopup.setAddtoWatchlistClickHandler(handleAddToWatchlistClick);
+          this._openedPopup.setMarkAsWatchedClickHandler(handleMarkAsWatchedClick);
+          this._openedPopup.setAddToFavoriteClickHandler(handleAddToFavoriteClick);
+          this._openedPopup.setDeleteCommentClickHandler(handleCommentDelete);
+          this._openedPopup.setCloseButtonClickHandler(popupCloseHandler);
+          this._openedPopup.setCtrlEnterPressHandler(handleCommentSubmit);
+          document.addEventListener(`keydown`, onEscKeyDown);
+        });
     };
 
     filmComponent.setAddtoWatchlistClickHandler(handleAddToWatchlistClick);
@@ -348,8 +369,22 @@ export default class MovieList {
     this._mostCommentedFilmsContainer = mostCommentedFilmsContainer;
   }
 
+  _renderUserComponent(films) {
+    const user = generateUser(films);
+    this._userRankComponent = new UserRankView(user);
+    renderElement(this._headerContainer, this._userRankComponent, RenderPosition.BEFOREEND);
+  }
+
   _renderNoFilmsTextComponent() {
     renderElement(this._mainContainer, this._noFilmsTextComponent, RenderPosition.BEFOREEND);
+  }
+
+  _renderLoadingComponent() {
+    renderElement(this._mainContainer, this._loadingComponent, RenderPosition.BEFOREEND);
+  }
+
+  _renderFilmsCounterComponent() {
+    renderElement(this._footerContainer, this._filmsCounterComponent, RenderPosition.BEFOREEND);
   }
 
   _handleSortTypeChange(sortType) {
@@ -383,6 +418,12 @@ export default class MovieList {
         }
         this._renderFilms(this._getFilms());
         this._renderedFilmsCount += 1;
+      } else {
+        this._renderFilms(this._getFilms().slice(0, Math.min(this._getFilms().length, this._renderedFilmsCount)));
+
+        if (this._getFilms().length > this._renderedFilmsCount) {
+          this._renderShowMoreButtonComponent();
+        }
       }
     } else {
       this._renderFilms(this._getFilms().slice(0, Math.min(this._getFilms().length, this._renderedFilmsCount)));
@@ -436,10 +477,18 @@ export default class MovieList {
   }
 
   _renderMovieSection() {
+    if (this._isLoading) {
+      this._renderLoadingComponent();
+      this._renderFilmsCounterComponent();
+      return;
+    }
+
     if (this._getFilms().length === 0) {
       this._renderNoFilmsTextComponent();
       return;
     }
+
+    this._renderUserComponent(this._filmsModel.getFilms(true));
 
     this._renderFilmsSectionComponent();
 
@@ -447,5 +496,8 @@ export default class MovieList {
 
     this._renderTopFilmsComponent(`rating`);
     this._renderTopFilmsComponent(`comments`);
+
+    this._filmsCounterComponent = new FilmsCounterView(this._filmsModel.getFilms(true).length);
+    this._renderFilmsCounterComponent();
   }
 }

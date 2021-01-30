@@ -43,7 +43,7 @@ export const sortFilmsByDate = (filmA, filmB) => {
 };
 
 export const sortFilmsByComments = (filmA, filmB) => {
-  return filmB[1].length - filmA[1].length;
+  return filmB.comments.length - filmA.comments.length;
 };
 
 export const updateItem = (items, updatedItem) => {

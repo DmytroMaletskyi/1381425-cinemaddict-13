@@ -42,7 +42,7 @@ const createFilmsDetailsPopupTemplate = (film, comments) => {
         </div>
         <div class="film-details__info-wrap">
           <div class="film-details__poster">
-            <img class="film-details__poster-img" src="./images/posters/${film.poster}" alt="">
+            <img class="film-details__poster-img" src="${film.poster}" alt="">
 
             <p class="film-details__age">${film.ageRating}</p>
           </div>
@@ -212,11 +212,17 @@ export default class PopupView extends SmartView {
     if (this._emoji && commentInput.value !== ``) {
       const newComment = {
         id: generateId(),
-        text: commentInput.value,
+        text: he.encode(commentInput.value),
         emotion: this._emoji,
         author: `anonymous`,
         date: dayjs()
       };
+
+      // {
+      //   "comment": "a film that changed my life, a true masterpiece, post-credit scene was just amazing omg.",
+      //   "date": "2019-05-11T16:12:32.554Z",
+      //   "emotion": "smile"
+      // }
 
       this._emoji = ``;
       return newComment;
