@@ -1,40 +1,34 @@
 import MovieListPresenter from "./presenter/movie-list.js";
 import FilterPresenter from "./presenter/filter.js";
-import UserRankView from "./view/user-rank.js";
-import FilmsCounterView from "./view/films-counter.js";
 import FilmsModel from "./model/films.js";
 import CommentsModel from "./model/comments.js";
 import FilterModel from "./model/filter.js";
-import {RenderPosition, renderElement} from "./utils/render.js";
-import {generateFilmsList} from "./mock/film.js";
-import {generateUser} from "./mock/user.js";
+import {UpdateType} from "./const.js";
+import Api from "./api.js";
 
-const films = generateFilmsList();
-const user = generateUser(films);
+const AUTHORIZATION = `Basic sDklfja3S342r3q2`;
+const END_POINT = `https://13.ecmascript.pages.academy/cinemaddict/`;
+
+const siteBodyElement = document.querySelector(`body`);
+const siteMainElement = siteBodyElement.querySelector(`.main`);
+
+const api = new Api(END_POINT, AUTHORIZATION);
 
 const filmsModel = new FilmsModel();
 const commentsModel = new CommentsModel();
 const filtersModel = new FilterModel();
 
-filmsModel.setFilms(films);
-
-filmsModel.getFilms().forEach((film) => {
-  commentsModel.setComments(film.id, film.comments);
-});
-
-const siteBodyElement = document.querySelector(`body`);
-const siteHeaderElement = siteBodyElement.querySelector(`.header`);
-const siteMainElement = siteBodyElement.querySelector(`.main`);
-const siteFooterElement = siteBodyElement.querySelector(`.footer`);
-
-const movieListPresenter = new MovieListPresenter(siteBodyElement, siteMainElement, filmsModel, commentsModel, filtersModel);
+const movieListPresenter = new MovieListPresenter(siteBodyElement, siteMainElement, filmsModel, commentsModel, filtersModel, api);
 const filterPresenter = new FilterPresenter(siteMainElement, filtersModel, filmsModel);
 
-if (films.length > 0) {
-  renderElement(siteHeaderElement, new UserRankView(user), RenderPosition.BEFOREEND);
-}
 
 filterPresenter.init();
 movieListPresenter.init();
 
-renderElement(siteFooterElement, new FilmsCounterView(films.length), RenderPosition.BEFOREEND);
+api.getFilms()
+  .then((films) => {
+    filmsModel.setFilms(UpdateType.INIT, films);
+  })
+  .catch(() => {
+    filmsModel.setFilms(UpdateType.INIT, []);
+  });

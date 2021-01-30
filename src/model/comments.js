@@ -1,4 +1,5 @@
 import Observer from "../utils/observer.js";
+import dayjs from "dayjs";
 
 export default class Comments extends Observer {
   constructor() {
@@ -40,5 +41,35 @@ export default class Comments extends Observer {
     ];
 
     this._notify(updateType, commentId, filmId);
+  }
+
+  static adaptToClient(comment) {
+    const adaptedComment = Object.assign(
+        {},
+        comment,
+        {
+          text: comment.comment,
+          date: dayjs(comment.date)
+        }
+    );
+
+    delete adaptedComment.comment;
+
+    return adaptedComment;
+  }
+
+  static adaptToServer(comment) {
+    const adaptedComment = Object.assign(
+        {},
+        comment,
+        {
+          "comment": comment.text,
+          "date": dayjs(comment.date).toISOString()
+        }
+    );
+
+    delete adaptedComment.text;
+
+    return adaptedComment;
   }
 }
