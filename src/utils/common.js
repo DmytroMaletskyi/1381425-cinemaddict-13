@@ -4,10 +4,10 @@ import {SortType} from "../const.js";
 
 export const copyFilmsArray = (filmsArray) => {
   const copiedArray = JSON.parse(JSON.stringify(filmsArray));
-  for (let film of copiedArray) {
+  for (const film of copiedArray) {
     film.releaseDate = dayjs(film.releaseDate);
     film.duration = dayjs.extend(duration).duration(film.duration);
-    for (let comment of film.comments) {
+    for (const comment of film.comments) {
       comment.date = dayjs(comment.date);
     }
   }

@@ -7,7 +7,7 @@ const ENTER_KEY_CODE = 13;
 
 const renderGenres = (genres) => {
   let genresList = ``;
-  for (let genre of genres) {
+  for (const genre of genres) {
     genresList = `${genresList}<span class="film-details__genre">${genre}</span>`;
   }
   return genresList;
@@ -21,7 +21,7 @@ const renderDeleteButton = (comment, isDeleting, disabledId) => {
 
 const renderComments = (comments, isDisabled = false, disabledId = ``) => {
   let commentsList = ``;
-  for (let comment of comments) {
+  for (const comment of comments) {
     commentsList = `${commentsList}
     <li class="film-details__comment">
       <span class="film-details__comment-emoji">

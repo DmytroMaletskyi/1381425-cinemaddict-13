@@ -39,8 +39,8 @@ export const filterWatchedFilmsInRange = (data) => {
 
 export const countFilmsByGenre = (watchedFilms) => {
   const genresStatistic = {};
-  for (let film of watchedFilms) {
-    for (let genre of film.genre) {
+  for (const film of watchedFilms) {
+    for (const genre of film.genre) {
       if (genre in genresStatistic) {
         genresStatistic[genre] += 1;
       } else {
@@ -55,7 +55,7 @@ export const countFilmsByGenre = (watchedFilms) => {
 export const defineTopGenre = (filmsByGenre) => {
   let topGenre = ``;
   let topValue = 0;
-  for (let key of Object.keys(filmsByGenre)) {
+  for (const key of Object.keys(filmsByGenre)) {
     if (filmsByGenre[key] > topValue) {
       topValue = filmsByGenre[key];
       topGenre = key;
