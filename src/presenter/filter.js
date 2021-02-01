@@ -70,7 +70,7 @@ export default class Filter {
         this._prevFilterType = this._currentFilter;
         this._currentFilter = ``;
         this._movieListPresenter.destroy();
-        this._statSectionComponent = new StatSectionView(this._filmsModel.getFilms())
+        this._statSectionComponent = new StatSectionView(this._filmsModel.getFilms());
         renderElement(this._mainContainer, this._statSectionComponent, RenderPosition.BEFOREEND);
         break;
     }
