@@ -1,5 +1,4 @@
 import SmartView from "./smart.js";
-import {generateId} from "../utils/common.js";
 import {createElement} from "../utils/render.js";
 import dayjs from "dayjs";
 import he from "he";
@@ -12,7 +11,13 @@ const renderGenres = (genres) => {
   return genresList;
 };
 
-const renderComments = (comments) => {
+const renderDeleteButton = (comment, isDeleting, disabledId) => {
+  const disabled = isDeleting && comment.id === disabledId ? `disabled` : ``;
+  const deleteText = isDeleting && comment.id === disabledId ? `Deleting...` : `Delete`;
+  return `<button class="film-details__comment-delete" data-comment-id="${comment.id}" ${disabled}>${deleteText}</button>`;
+};
+
+const renderComments = (comments, isDisabled = false, disabledId = ``) => {
   let commentsList = ``;
   for (let comment of comments) {
     commentsList = `${commentsList}
@@ -25,7 +30,7 @@ const renderComments = (comments) => {
         <p class="film-details__comment-info">
           <span class="film-details__comment-author">${comment.author}</span>
           <span class="film-details__comment-day">${comment.date.format(`YYYY/M/D H:m`)}</span>
-          <button class="film-details__comment-delete" data-comment-id="${comment.id}">Delete</button>
+          ${renderDeleteButton(comment, isDisabled, disabledId)}
         </p>
       </div>
     </li>`;
@@ -33,7 +38,8 @@ const renderComments = (comments) => {
   return commentsList;
 };
 
-const createFilmsDetailsPopupTemplate = (film, comments) => {
+const createFilmsDetailsPopupTemplate = (film, comments, disabledId = ``) => {
+  const disableForm = film.isSubmitting ? `disabled` : ``;
   return `<section class="film-details">
     <form class="film-details__inner" action="" method="get">
       <div class="film-details__top-container">
@@ -114,33 +120,33 @@ const createFilmsDetailsPopupTemplate = (film, comments) => {
           <h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${comments.length}</span></h3>
 
           <ul class="film-details__comments-list">
-            ${renderComments(comments)}
+            ${renderComments(comments, film.isDeleting, disabledId)}
           </ul>
 
           <div class="film-details__new-comment">
             <div class="film-details__add-emoji-label"></div>
 
             <label class="film-details__comment-label">
-              <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment"></textarea>
+              <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment" ${disableForm}></textarea>
             </label>
 
             <div class="film-details__emoji-list">
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-smile" value="smile">
+              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-smile" value="smile" ${disableForm}>
               <label class="film-details__emoji-label" for="emoji-smile">
                 <img src="./images/emoji/smile.png" width="30" height="30" alt="emoji">
               </label>
 
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-sleeping" value="sleeping">
+              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-sleeping" value="sleeping" ${disableForm}>
               <label class="film-details__emoji-label" for="emoji-sleeping">
                 <img src="./images/emoji/sleeping.png" width="30" height="30" alt="emoji">
               </label>
 
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-puke" value="puke">
+              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-puke" value="puke" ${disableForm}>
               <label class="film-details__emoji-label" for="emoji-puke">
                 <img src="./images/emoji/puke.png" width="30" height="30" alt="emoji">
               </label>
 
-              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-angry" value="angry">
+              <input class="film-details__emoji-item visually-hidden" name="comment-emoji" type="radio" id="emoji-angry" value="angry" ${disableForm}>
               <label class="film-details__emoji-label" for="emoji-angry">
                 <img src="./images/emoji/angry.png" width="30" height="30" alt="emoji">
               </label>
@@ -170,7 +176,7 @@ export default class PopupView extends SmartView {
   }
 
   getTemplate() {
-    return createFilmsDetailsPopupTemplate(this._film, this._commentsModel.getFilmComments(this._film.id));
+    return createFilmsDetailsPopupTemplate(this._film, this._commentsModel.getFilmComments(this._film.id), this._deleteCommentId);
   }
 
   restoreHandlers() {
@@ -202,7 +208,7 @@ export default class PopupView extends SmartView {
     emojiContainer.appendChild(emojiImage);
   }
 
-  scollToPopupBottom() {
+  scrollToPopupBottom() {
     this.getElement().scroll(0, this.getElement().offsetHeight);
   }
 
@@ -211,18 +217,10 @@ export default class PopupView extends SmartView {
 
     if (this._emoji && commentInput.value !== ``) {
       const newComment = {
-        id: generateId(),
         text: he.encode(commentInput.value),
         emotion: this._emoji,
-        author: `anonymous`,
         date: dayjs()
       };
-
-      // {
-      //   "comment": "a film that changed my life, a true masterpiece, post-credit scene was just amazing omg.",
-      //   "date": "2019-05-11T16:12:32.554Z",
-      //   "emotion": "smile"
-      // }
 
       this._emoji = ``;
       return newComment;
@@ -232,7 +230,9 @@ export default class PopupView extends SmartView {
 
   _deleteButtonClickHandler(evt) {
     evt.preventDefault();
+    this._deleteCommentId = evt.target.dataset.commentId;
     this._callback.clickDeleteCommentButton(evt.target.dataset.commentId);
+    this._deleteCommentId = ``;
   }
 
   setDeleteCommentClickHandler(callback) {
