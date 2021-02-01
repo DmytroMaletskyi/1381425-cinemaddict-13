@@ -1,5 +1,4 @@
 import SortView from "../view/film-sort.js";
-import StatsSectionView from "../view/stats-section.js";
 import FilmsSectionView from "../view/films-section.js";
 import NoFilmsTextView from "../view/no-films.js";
 import FilmCardView from "../view/film-card.js";
@@ -9,21 +8,15 @@ import LoadingView from "../view/loading.js";
 import FilmsCounterView from "../view/films-counter.js";
 import UserRankView from "../view/user-rank.js";
 import {filter} from "../utils/filter.js";
-import {RenderPosition, renderElement, remove} from "../utils/render.js";
-import {sortFilmsByRating, sortFilmsByDate, sortFilmsByComments} from "../utils/common.js";
-import {SortType} from "../const.js";
-import {UserAction, UpdateType} from "../const.js";
-import {generateUser} from "../mock/user.js";
+import {RenderPosition, renderElement, remove, replace} from "../utils/render.js";
+import {sortFilmsByRating, sortFilmsByDate, sortFilmsByComments, verifyEqualRating, verifyEqualCommentsAmount, getRandomFilms} from "../utils/common.js";
+import {SortType, PopupState, UserAction, UpdateType} from "../const.js";
 import dayjs from "dayjs";
 
 const FILMS_AMOUNT_PER_STEP = 5;
 const EXTRA_FILMS_AMOUNT = 2;
-
-export const PopupState = {
-  SUBMITTING: `SUBMITTING`,
-  DELETING: `DELETING`,
-  ABORTING: `ABORTING`
-};
+const ESCAPE_KEY = `Escape`;
+const SHORT_ESCAPE_KEY = `Esc`;
 
 export default class MovieList {
   constructor(page, mainContainer, filmsModel, commentsModel, filtersModel, api) {
@@ -46,7 +39,6 @@ export default class MovieList {
 
     this._loadingComponent = new LoadingView();
     this._filmsSectionComponent = new FilmsSectionView();
-    this._statsSectionComponent = new StatsSectionView();
     this._showMoreButtonComponent = null;
     this._noFilmsTextComponent = new NoFilmsTextView();
     this._sortComponent = null;
@@ -57,10 +49,6 @@ export default class MovieList {
     this._handleModelEvent = this._handleModelEvent.bind(this);
     this._handleShowMoreButtonClick = this._handleShowMoreButtonClick.bind(this);
     this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
-
-    this._filmsModel.addObserver(this._handleModelEvent);
-    this._commentsModel.addObserver(this._handleModelEvent);
-    this._filtersModel.addObserver(this._handleModelEvent);
   }
 
   _getFilms(defaultFilter = false, sortType = this._currentSortType) {
@@ -84,7 +72,22 @@ export default class MovieList {
   }
 
   init() {
+    this._filmsModel.addObserver(this._handleModelEvent);
+    this._commentsModel.addObserver(this._handleModelEvent);
+    this._filtersModel.addObserver(this._handleModelEvent);
+
     this._renderMovieSection();
+  }
+
+  destroy() {
+    this._clearMovieSection({resetRenderedFilmsCount: true, resetSortType: true});
+
+    remove(this._sortComponent);
+    remove(this._filmsSectionComponent);
+
+    this._filmsModel.removeObserver(this._handleModelEvent);
+    this._commentsModel.removeObserver(this._handleModelEvent);
+    this._filtersModel.removeObserver(this._handleModelEvent);
   }
 
   setViewState(state) {
@@ -162,14 +165,12 @@ export default class MovieList {
   }
 
   _updateFilmData(dataId) {
-    // Если фильм сейчас отфильтрован - обновляем в фильтре, если нет во всех фильмах обходя фильтр
     if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
       this._renderedFilmsData[dataId] = this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)];
     } else {
       this._renderedFilmsData[dataId] = this._getFilms(true)[this._getFilms(true).findIndex((filmItem) => filmItem.id === dataId)];
     }
 
-    // Если фильм отрисован в основной секции и он попадает под теперешний фильтр - апдейт, если больше не попадает, то перерисовываем список
     if (this._renderedFilms[dataId]) {
       if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
         this._renderedFilms[dataId].updateFilmData(this._renderedFilmsData[dataId]);
@@ -207,29 +208,33 @@ export default class MovieList {
 
     switch (updateType) {
       case UpdateType.PATCH:
-        // Update film + popup
+
         if (this._renderedFilms[data.id]) {
           this._renderedFilms[data.id].updateElement();
         }
+
         if (this._renderedTopRatedFilms[data.id]) {
           this._renderedTopRatedFilms[data.id].updateElement();
         }
+
         if (this._renderedMostCommentedFilms[data.id]) {
           this._renderedMostCommentedFilms[data.id].updateElement();
         }
+
         if (this._openedPopup) {
           this._openedPopup.updateElement();
         }
+        const newUserRankComponent = new UserRankView(this._getFilms(true));
+        replace(newUserRankComponent, this._userRankComponent);
+        this._userRankComponent = newUserRankComponent;
         break;
 
       case UpdateType.MINOR:
-        // Update main list
         this._clearMovieSection({resetRenderedFilmsCount: true, resetSortType: true});
         this._renderMainFilmsSection();
         break;
 
       case UpdateType.MAJOR:
-        // Update full page
         this._clearMovieSection();
         this._clearMostCommentedSection();
         this._clearTopRatedSection();
@@ -307,18 +312,11 @@ export default class MovieList {
 
       const popupCloseHandler = () => {
         this._page.classList.remove(`hide-overflow`);
-        document.removeEventListener(`keydown`, onEscKeyDown);
         this._openedPopup.removeCtrlEnterPressHandler();
+        this._openedPopup.removeEscPressHandler();
         remove(this._openedPopup);
         this._openedPopup = ``;
         updateFilmData();
-      };
-
-      const onEscKeyDown = (evt) => {
-        if (evt.key === `Escape` || evt.key === `Esc`) {
-          evt.preventDefault();
-          popupCloseHandler();
-        }
       };
 
       if (this._openedPopup) {
@@ -352,13 +350,20 @@ export default class MovieList {
             }
           };
 
+          const handleEscKeyPress = (evt) => {
+            if (evt.key === ESCAPE_KEY || evt.key === SHORT_ESCAPE_KEY) {
+              evt.preventDefault();
+              popupCloseHandler();
+            }
+          };
+
           this._openedPopup.setAddtoWatchlistClickHandler(handleAddToWatchlistClick);
           this._openedPopup.setMarkAsWatchedClickHandler(handleMarkAsWatchedClick);
           this._openedPopup.setAddToFavoriteClickHandler(handleAddToFavoriteClick);
           this._openedPopup.setDeleteCommentClickHandler(handleCommentDelete);
           this._openedPopup.setCloseButtonClickHandler(popupCloseHandler);
           this._openedPopup.setCtrlEnterPressHandler(handleCommentSubmit);
-          document.addEventListener(`keydown`, onEscKeyDown);
+          this._openedPopup.setEscPressHandler(handleEscKeyPress);
         });
     };
 
@@ -384,13 +389,27 @@ export default class MovieList {
 
   _renderTopFilmsComponent(topType) {
     let topFilmsContainer;
+    let randomFilms = [];
     switch (topType) {
       case SortType.RATING:
+        if (verifyEqualRating(this._getFilms(true))) {
+          randomFilms = getRandomFilms(this._getFilms(true), EXTRA_FILMS_AMOUNT);
+        }
         topFilmsContainer = this._topRatedFilmsContainer;
         break;
       case SortType.COMMENTS:
+        if (verifyEqualCommentsAmount(this._getFilms(true))) {
+          randomFilms = getRandomFilms(this._getFilms(true), EXTRA_FILMS_AMOUNT);
+        }
         topFilmsContainer = this._mostCommentedFilmsContainer;
         break;
+    }
+
+    if (randomFilms.length !== 0) {
+      for (let i = 0; i < EXTRA_FILMS_AMOUNT; i++) {
+        this._renderFilmCardComponent(topFilmsContainer, randomFilms[i]);
+      }
+      return;
     }
 
     for (let i = 0; i < EXTRA_FILMS_AMOUNT; i++) {
@@ -434,8 +453,7 @@ export default class MovieList {
   }
 
   _renderUserComponent(films) {
-    const user = generateUser(films);
-    this._userRankComponent = new UserRankView(user);
+    this._userRankComponent = new UserRankView(films);
     renderElement(this._headerContainer, this._userRankComponent, RenderPosition.BEFOREEND);
   }
 
@@ -536,10 +554,6 @@ export default class MovieList {
     });
   }
 
-  _renderStatsComponent() {
-    // Рендер статистики
-  }
-
   _renderMovieSection() {
     if (this._isLoading) {
       this._renderLoadingComponent();
@@ -547,11 +561,12 @@ export default class MovieList {
       return;
     }
 
-    if (this._getFilms().length === 0) {
+    if (this._getFilms(true).length === 0) {
       this._renderNoFilmsTextComponent();
       return;
     }
 
+    remove(this._userRankComponent);
     this._renderUserComponent(this._filmsModel.getFilms(true));
 
     this._renderFilmsSectionComponent();
@@ -561,6 +576,7 @@ export default class MovieList {
     this._renderTopFilmsComponent(`rating`);
     this._renderTopFilmsComponent(`comments`);
 
+    remove(this._filmsCounterComponent);
     this._filmsCounterComponent = new FilmsCounterView(this._filmsModel.getFilms(true).length);
     this._renderFilmsCounterComponent();
   }

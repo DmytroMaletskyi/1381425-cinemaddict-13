@@ -14,7 +14,6 @@ export default class SortView extends AbstractView {
     super();
 
     this._currentSortType = currentSortType;
-    // this._currentSortingLink = this.getElement().querySelector(`.sort__button--active`);
     this._sortTypeChangeHandler = this._sortTypeChangeHandler.bind(this);
   }
 
@@ -29,10 +28,6 @@ export default class SortView extends AbstractView {
 
     evt.preventDefault();
     this._callback.sortTypeChange(evt.target.dataset.sortType);
-
-    // this._currentSortingLink.classList.remove(`sort__button--active`);
-    // evt.target.classList.add(`sort__button--active`);
-    // this._currentSortingLink = evt.target;
   }
 
   setSortTypeChangeHandler(callback) {

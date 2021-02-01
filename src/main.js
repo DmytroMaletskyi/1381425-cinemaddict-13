@@ -19,9 +19,7 @@ const commentsModel = new CommentsModel();
 const filtersModel = new FilterModel();
 
 const movieListPresenter = new MovieListPresenter(siteBodyElement, siteMainElement, filmsModel, commentsModel, filtersModel, api);
-const filterPresenter = new FilterPresenter(siteMainElement, filtersModel, filmsModel);
-
-
+const filterPresenter = new FilterPresenter(siteMainElement, filtersModel, filmsModel, movieListPresenter);
 filterPresenter.init();
 movieListPresenter.init();
 

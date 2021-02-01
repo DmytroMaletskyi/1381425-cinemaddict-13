@@ -2,8 +2,6 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import {SortType} from "../const.js";
 
-export const generateId = () => (Date.now() + parseInt(Math.random() * 10000, 10)).toString();
-
 export const copyFilmsArray = (filmsArray) => {
   const copiedArray = JSON.parse(JSON.stringify(filmsArray));
   for (let film of copiedArray) {
@@ -58,4 +56,38 @@ export const updateItem = (items, updatedItem) => {
     updatedItem,
     ...items.slice(index + 1)
   ];
+};
+
+export const verifyEqualRating = (films) => {
+  const firstFilmRating = films[0].rating;
+  let isEqual = false;
+  films.forEach((film) => {
+    if (film.rating !== firstFilmRating) {
+      isEqual = false;
+    } else {
+      isEqual = true;
+    }
+  });
+  return isEqual;
+};
+
+export const verifyEqualCommentsAmount = (films) => {
+  const firstFilmCommentsAmount = films[0].comments.length;
+  let isEqual = false;
+  films.forEach((film) => {
+    if (film.comments.length !== firstFilmCommentsAmount) {
+      isEqual = false;
+    } else {
+      isEqual = true;
+    }
+  });
+  return isEqual;
+};
+
+export const getRandomFilms = (films, amount) => {
+  const randomFilms = [];
+  for (let i = 0; i < amount; i++) {
+    randomFilms.push(films[Math.floor(Math.random() * films.length)]);
+  }
+  return randomFilms;
 };

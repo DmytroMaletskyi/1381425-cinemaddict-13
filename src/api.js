@@ -1,17 +1,6 @@
 import FilmsModel from "./model/films.js";
 import CommentsModel from "./model/comments.js";
-
-const Method = {
-  GET: `GET`,
-  PUT: `PUT`,
-  POST: `POST`,
-  DELETE: `DELETE`
-};
-
-const SuccessHTTPStatusRange = {
-  MIN: 200,
-  MAX: 299
-};
+import {SuccessHTTPStatusRange, Method} from "./const.js";
 
 export default class Api {
   constructor(endPoint, authorization) {
