@@ -3,6 +3,8 @@ import {createElement} from "../utils/render.js";
 import dayjs from "dayjs";
 import he from "he";
 
+const ENTER_KEY_CODE = 13;
+
 const renderGenres = (genres) => {
   let genresList = ``;
   for (let genre of genres) {
@@ -162,13 +164,14 @@ export default class PopupView extends SmartView {
   constructor(film, commentsModel) {
     super();
 
-    this._film = film;
+    this._data = film;
     this._commentsModel = commentsModel;
     this._closeButtonClickHandler = this._closeButtonClickHandler.bind(this);
     this._addToWatchlistHandler = this._addToWatchlistHandler.bind(this);
     this._markAsWatchedHandler = this._markAsWatchedHandler.bind(this);
     this._addToFavoriteHandler = this._addToFavoriteHandler.bind(this);
     this._ctrlEnterKeyPressHandler = this._ctrlEnterKeyPressHandler.bind(this);
+    this._escKeyPressHandler = this._escKeyPressHandler.bind(this);
     this._emojiClickHandler = this._emojiClickHandler.bind(this);
     this._deleteButtonClickHandler = this._deleteButtonClickHandler.bind(this);
 
@@ -176,7 +179,7 @@ export default class PopupView extends SmartView {
   }
 
   getTemplate() {
-    return createFilmsDetailsPopupTemplate(this._film, this._commentsModel.getFilmComments(this._film.id), this._deleteCommentId);
+    return createFilmsDetailsPopupTemplate(this._data, this._commentsModel.getFilmComments(this._data.id), this._deleteCommentId);
   }
 
   restoreHandlers() {
@@ -193,7 +196,7 @@ export default class PopupView extends SmartView {
   }
 
   updateFilmData(newData) {
-    this._film = newData;
+    this._data = newData;
   }
 
   _emojiClickHandler(evt) {
@@ -242,9 +245,9 @@ export default class PopupView extends SmartView {
   }
 
   _ctrlEnterKeyPressHandler(evt) {
-    if (evt.ctrlKey && evt.keyCode === 13) {
+    if (evt.ctrlKey && evt.keyCode === ENTER_KEY_CODE) {
       evt.preventDefault();
-      this._callback.pressCtrlEnterKey(this._film);
+      this._callback.pressCtrlEnterKey(this._data);
     }
   }
 
@@ -256,6 +259,20 @@ export default class PopupView extends SmartView {
 
   removeCtrlEnterPressHandler() {
     document.removeEventListener(`keydown`, this._ctrlEnterKeyPressHandler);
+  }
+
+  _escKeyPressHandler(evt) {
+    this._callback.pressEscKey(evt);
+  }
+
+  setEscPressHandler(callback) {
+    this._callback.pressEscKey = callback;
+
+    document.addEventListener(`keydown`, this._escKeyPressHandler);
+  }
+
+  removeEscPressHandler() {
+    document.removeEventListener(`keydown`, this._escKeyPressHandler);
   }
 
   _closeButtonClickHandler(evt) {

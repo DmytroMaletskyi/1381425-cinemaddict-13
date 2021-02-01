@@ -1,4 +1,5 @@
 import AbstractView from "./abstract.js";
+import {MenuItem} from "../const.js";
 
 const createFilterItemTemplate = (filter, currentFilterType) => {
   const {type, name, count} = filter;
@@ -8,14 +9,15 @@ const createFilterItemTemplate = (filter, currentFilterType) => {
     href="#${type}"
     class="main-navigation__item
     ${type === currentFilterType ? `main-navigation__item--active` : ``}"
-    data-filter-type="${type}">
+    data-filter-type="${type}" data-menu-type="${MenuItem.FILMS}">
     ${name}
-    ${type === `all` ? `` : `<span class="main-navigation__item-count">${count}</span>`}
+    ${type === `all` ? `` : `<span class="main-navigation__item-count" data-filter-type="${type}" data-menu-type="${MenuItem.FILMS}">${count}</span>`}
     </a>`
   );
 };
 
-const createSiteMenuTemplate = (filters, currentFilterType) => {
+const createSiteMenuTemplate = (filters, currentFilterType, currentMenuItem) => {
+  currentFilterType = currentMenuItem === MenuItem.FILMS ? currentFilterType : ``;
   const filterItemsTemplate = filters
   .map((filter) => createFilterItemTemplate(filter, currentFilterType))
   .join(``);
@@ -24,30 +26,34 @@ const createSiteMenuTemplate = (filters, currentFilterType) => {
     <div class="main-navigation__items">
       ${filterItemsTemplate}
     </div>
-    <a href="#stats" class="main-navigation__additional">Stats</a>
+    <a href="#stats" class="main-navigation__additional ${currentMenuItem === MenuItem.STATISTICS ? `main-navigation__additional--active` : ``}" data-menu-type="${MenuItem.STATISTICS}">Stats</a>
   </nav>`;
 };
 
 export default class SiteMenuView extends AbstractView {
-  constructor(filters, currentFilterType) {
+  constructor(filters, currentFilterType, currentMenuItem) {
     super();
     this._filters = filters;
+    this._currentMenuItem = currentMenuItem;
     this._currentFilter = currentFilterType;
 
-    this._filterTypeChangeHandler = this._filterTypeChangeHandler.bind(this);
+    this._menuClickHandler = this._menuClickHandler.bind(this);
   }
 
   getTemplate() {
-    return createSiteMenuTemplate(this._filters, this._currentFilter);
+    return createSiteMenuTemplate(this._filters, this._currentFilter, this._currentMenuItem);
   }
 
-  _filterTypeChangeHandler(evt) {
+  _menuClickHandler(evt) {
     evt.preventDefault();
-    this._callback.filterTypeChange(evt.target.dataset.filterType);
+    if (evt.target.tagName === `A` || evt.target.tagName === `SPAN`) {
+      this._callback.menuClick(evt.target.dataset.menuType, evt.target.dataset.filterType);
+    }
   }
 
-  setFilterTypeChangeHandler(callback) {
-    this._callback.filterTypeChange = callback;
-    this.getElement().addEventListener(`click`, this._filterTypeChangeHandler);
+  setMenuClickHandler(menuClickCallback, filterTypeChangeCallback) {
+    this._callback.menuClick = menuClickCallback;
+    this._callback.filterTypeChange = filterTypeChangeCallback;
+    this.getElement().addEventListener(`click`, this._menuClickHandler);
   }
 }
