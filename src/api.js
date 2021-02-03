@@ -41,11 +41,12 @@ export default class Api {
       .then(Api.toJSON)
       .then((response) => {
         let adaptedComment = {};
-        response.comments.forEach((retrievedComment) => {
+        for (const retrievedComment of response.comments) {
           if (!film.comments.includes(retrievedComment.id)) {
             adaptedComment = CommentsModel.adaptToClient(retrievedComment);
+            break;
           }
-        });
+        }
 
         return adaptedComment;
       }

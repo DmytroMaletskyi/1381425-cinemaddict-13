@@ -2,16 +2,16 @@ import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import {SortType} from "../const.js";
 
-export const copyFilmsArray = (filmsArray) => {
-  const copiedArray = JSON.parse(JSON.stringify(filmsArray));
-  for (const film of copiedArray) {
+export const copyFilmsArray = (films) => {
+  const copiedFilms = JSON.parse(JSON.stringify(films));
+  for (const film of copiedFilms) {
     film.releaseDate = dayjs(film.releaseDate);
     film.duration = dayjs.extend(duration).duration(film.duration);
     for (const comment of film.comments) {
       comment.date = dayjs(comment.date);
     }
   }
-  return copiedArray;
+  return copiedFilms;
 };
 
 export const sortFilmsBy = (sortType = SortType.RATING, films) => {
@@ -60,27 +60,26 @@ export const updateItem = (items, updatedItem) => {
 
 export const verifyEqualRating = (films) => {
   const firstFilmRating = films[0].rating;
-  let isEqual = false;
-  films.forEach((film) => {
+  let isEqual = true;
+  for (const film of films) {
     if (film.rating !== firstFilmRating) {
       isEqual = false;
-    } else {
-      isEqual = true;
+      break;
     }
-  });
+  }
+
   return isEqual;
 };
 
 export const verifyEqualCommentsAmount = (films) => {
   const firstFilmCommentsAmount = films[0].comments.length;
-  let isEqual = false;
-  films.forEach((film) => {
+  let isEqual = true;
+  for (const film of films) {
     if (film.comments.length !== firstFilmCommentsAmount) {
       isEqual = false;
-    } else {
-      isEqual = true;
+      break;
     }
-  });
+  }
   return isEqual;
 };
 

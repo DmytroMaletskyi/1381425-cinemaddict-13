@@ -8,7 +8,7 @@ const ENTER_KEY_CODE = 13;
 const renderGenres = (genres) => {
   let genresList = ``;
   for (const genre of genres) {
-    genresList = `${genresList}<span class="film-details__genre">${genre}</span>`;
+    genresList = `${genresList}<span class="film-details__genre">${he.encode(genre)}</span>`;
   }
   return genresList;
 };
@@ -16,7 +16,7 @@ const renderGenres = (genres) => {
 const renderDeleteButton = (comment, isDeleting, disabledId) => {
   const disabled = isDeleting && comment.id === disabledId ? `disabled` : ``;
   const deleteText = isDeleting && comment.id === disabledId ? `Deleting...` : `Delete`;
-  return `<button class="film-details__comment-delete" data-comment-id="${comment.id}" ${disabled}>${deleteText}</button>`;
+  return `<button class="film-details__comment-delete" data-comment-id="${he.encode(comment.id)}" ${disabled}>${deleteText}</button>`;
 };
 
 const renderComments = (comments, isDisabled = false, disabledId = ``) => {
@@ -25,13 +25,13 @@ const renderComments = (comments, isDisabled = false, disabledId = ``) => {
     commentsList = `${commentsList}
     <li class="film-details__comment">
       <span class="film-details__comment-emoji">
-        <img src="./images/emoji/${comment.emotion}.png" width="55" height="55" alt="${comment.emotion}">
+        <img src="./images/emoji/${he.encode(comment.emotion)}.png" width="55" height="55" alt="${he.encode(comment.emotion)}">
       </span>
       <div>
         <p class="film-details__comment-text">${he.encode(comment.text)}</p>
         <p class="film-details__comment-info">
-          <span class="film-details__comment-author">${comment.author}</span>
-          <span class="film-details__comment-day">${comment.date.format(`YYYY/M/D H:m`)}</span>
+          <span class="film-details__comment-author">${he.encode(comment.author)}</span>
+          <span class="film-details__comment-day">${he.encode(comment.date.format(`YYYY/M/D H:m`))}</span>
           ${renderDeleteButton(comment, isDisabled, disabledId)}
         </p>
       </div>
@@ -50,47 +50,47 @@ const createFilmsDetailsPopupTemplate = (film, comments, disabledId = ``) => {
         </div>
         <div class="film-details__info-wrap">
           <div class="film-details__poster">
-            <img class="film-details__poster-img" src="${film.poster}" alt="">
+            <img class="film-details__poster-img" src="${he.encode(film.poster)}" alt="">
 
-            <p class="film-details__age">${film.ageRating}</p>
+            <p class="film-details__age">${he.encode(film.ageRating.toString())}</p>
           </div>
 
           <div class="film-details__info">
             <div class="film-details__info-head">
               <div class="film-details__title-wrap">
-                <h3 class="film-details__title">${film.name}</h3>
-                <p class="film-details__title-original">Original: ${film.originalName}</p>
+                <h3 class="film-details__title">${he.encode(film.name)}</h3>
+                <p class="film-details__title-original">Original: ${he.encode(film.originalName)}</p>
               </div>
 
               <div class="film-details__rating">
-                <p class="film-details__total-rating">${film.rating}</p>
+                <p class="film-details__total-rating">${he.encode(film.rating.toString())}</p>
               </div>
             </div>
 
             <table class="film-details__table">
               <tr class="film-details__row">
                 <td class="film-details__term">Director</td>
-                <td class="film-details__cell">${film.director}</td>
+                <td class="film-details__cell">${he.encode(film.director)}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Writers</td>
-                <td class="film-details__cell">${film.screenwriters.join(`, `)}</td>
+                <td class="film-details__cell">${he.encode(film.screenwriters.join(`, `))}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Actors</td>
-                <td class="film-details__cell">${film.actors.join(`, `)}</td>
+                <td class="film-details__cell">${he.encode(film.actors.join(`, `))}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Release Date</td>
-                <td class="film-details__cell">${film.releaseDate.format(`D MMMM YYYY`)}</td>
+                <td class="film-details__cell">${he.encode(film.releaseDate.format(`DD MMMM YYYY`))}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Runtime</td>
-                <td class="film-details__cell">${film.duration.$d.hours}h ${film.duration.$d.minutes}m</td>
+                <td class="film-details__cell">${he.encode(film.duration.$d.hours.toString())}h ${he.encode(film.duration.$d.minutes.toString())}m</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">Country</td>
-                <td class="film-details__cell">${film.country}</td>
+                <td class="film-details__cell">${he.encode(film.country)}</td>
               </tr>
               <tr class="film-details__row">
                 <td class="film-details__term">${film.genre.length === 1 ? `Genre` : `Genres`}</td>
@@ -100,7 +100,7 @@ const createFilmsDetailsPopupTemplate = (film, comments, disabledId = ``) => {
             </table>
 
             <p class="film-details__film-description">
-              ${film.description};
+              ${he.encode(film.description)};
             </p>
           </div>
         </div>

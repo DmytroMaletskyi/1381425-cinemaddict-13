@@ -1,18 +1,19 @@
 import SmartView from "./smart.js";
+import he from "he";
 
 const MAX_DESCRIPTION_LENGTH = 140;
 
 const createFilmCardTemplate = (film) => {
   return `<article class="film-card">
-    <h3 class="film-card__title">${film.name}</h3>
-    <p class="film-card__rating">${film.rating}</p>
+    <h3 class="film-card__title">${he.encode(film.name)}</h3>
+    <p class="film-card__rating">${he.encode(film.rating.toString())}</p>
     <p class="film-card__info">
-      <span class="film-card__year">${film.releaseDate.format(`YYYY`)}</span>
-      <span class="film-card__duration">${film.duration.$d.hours}h ${film.duration.$d.minutes}m</span>
-      <span class="film-card__genre">${film.genre.join(`, `)}</span>
+      <span class="film-card__year">${he.encode(film.releaseDate.format(`YYYY`))}</span>
+      <span class="film-card__duration">${he.encode(film.duration.$d.hours.toString())}h ${he.encode(film.duration.$d.minutes.toString())}m</span>
+      <span class="film-card__genre">${he.encode(film.genre.join(`, `))}</span>
     </p>
-    <img src="${film.poster}" alt="" class="film-card__poster">
-    <p class="film-card__description">${(film.description.length > MAX_DESCRIPTION_LENGTH) ? `${film.description.substring(0, MAX_DESCRIPTION_LENGTH)}...` : film.description}</p>
+    <img src="${he.encode(film.poster)}" alt="" class="film-card__poster">
+    <p class="film-card__description">${(film.description.length > MAX_DESCRIPTION_LENGTH) ? `${he.encode(film.description.substring(0, MAX_DESCRIPTION_LENGTH))}...` : he.encode(film.description)}</p>
     <a class="film-card__comments">${(film.comments.length === 1) ? `${film.comments.length} comment` : `${film.comments.length} comments`}</a>
     <div class="film-card__controls">
       <button class="film-card__controls-item button film-card__controls-item--add-to-watchlist ${film.isInWatchlist ? `film-card__controls-item--active` : ``}" type="button">Add to watchlist</button>

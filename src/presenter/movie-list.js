@@ -54,10 +54,7 @@ export default class MovieList {
   _getFilms(defaultFilter = false, sortType = this._currentSortType) {
     let films = this._filmsModel.getFilms().slice();
 
-    if (!defaultFilter) {
-      const filterType = this._filtersModel.getFilter();
-      films = filter[filterType](films);
-    }
+    films = !defaultFilter ? filter[this._filtersModel.getFilter()](films) : films;
 
     switch (sortType) {
       case SortType.RATING:
@@ -165,14 +162,14 @@ export default class MovieList {
   }
 
   _updateFilmData(dataId) {
-    if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
-      this._renderedFilmsData[dataId] = this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)];
-    } else {
-      this._renderedFilmsData[dataId] = this._getFilms(true)[this._getFilms(true).findIndex((filmItem) => filmItem.id === dataId)];
-    }
+    const getFilm = (isDefaultFilter = false) => {
+      return this._getFilms(isDefaultFilter)[this._getFilms(isDefaultFilter).findIndex((filmItem) => filmItem.id === dataId)];
+    };
+
+    this._renderedFilmsData[dataId] = getFilm() ? getFilm() : getFilm(true);
 
     if (this._renderedFilms[dataId]) {
-      if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
+      if (getFilm()) {
         this._renderedFilms[dataId].updateFilmData(this._renderedFilmsData[dataId]);
       } else {
         this._clearMovieSection({resetRenderedFilmsCount: false, resetSortType: false});
@@ -180,7 +177,7 @@ export default class MovieList {
         this._renderMainFilmsSection();
       }
     } else {
-      if (this._getFilms()[this._getFilms().findIndex((filmItem) => filmItem.id === dataId)]) {
+      if (getFilm()) {
         this._clearMovieSection({resetRenderedFilmsCount: false, resetSortType: false});
         this._renderMainFilmsSection(true);
       }
@@ -531,11 +528,7 @@ export default class MovieList {
     remove(this._noFilmsTextComponent);
     remove(this._showMoreButtonComponent);
 
-    if (resetRenderedFilmsCount) {
-      this._renderedFilmsCount = FILMS_AMOUNT_PER_STEP;
-    } else {
-      this._renderedFilmsCount = Math.min(filmsCount, this._renderedFilmsCount);
-    }
+    this._renderedFilmsCount = resetRenderedFilmsCount ? FILMS_AMOUNT_PER_STEP : Math.min(filmsCount, this._renderedFilmsCount);
 
     if (resetSortType) {
       this._currentSortType = SortType.DEFAULT;
